@@ -166,7 +166,7 @@ header {
 
 .column-headings {
   display: grid;
-  grid-template-columns: 55px 116px minmax(0, 1fr) 150px;
+  grid-template-columns: 55px 116px minmax(0, 1fr) 170px;
   align-items: center;
   gap: 13px;
   padding: 10px 13px;
@@ -190,7 +190,7 @@ header {
 
 .level-row {
   display: grid;
-  grid-template-columns: 55px 116px minmax(0, 1fr) 150px;
+  grid-template-columns: 55px 116px minmax(0, 1fr) 170px;
   align-items: center;
   gap: 13px;
   min-height: 84px;
@@ -198,6 +198,7 @@ header {
   background: #1b1d23;
   border-bottom: 1px solid #30323a;
   transition: background .12s;
+  cursor: pointer;
 }
 
 .level-row:last-child {
@@ -280,6 +281,18 @@ header {
   background: #262233;
   border: 1px solid #483b63;
   color: #cbb8f2;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.records-count-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: #18232c;
+  border: 1px solid #2f4a5e;
+  color: #98c8eb;
   font-size: 10px;
   font-weight: 700;
 }
@@ -600,6 +613,7 @@ button {
   justify-content: center;
   padding: 16px;
   z-index: 100;
+  overflow-y: auto;
 }
 
 .modal-card {
@@ -609,6 +623,12 @@ button {
   border: 1px solid var(--border);
   border-radius: 5px;
   padding: 18px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-card.wide-modal {
+  max-width: 660px;
 }
 
 .modal-card h3 {
@@ -621,6 +641,30 @@ button {
   justify-content: flex-end;
   gap: 8px;
   margin-top: 12px;
+}
+
+.record-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.record-card {
+  background: #121319;
+  border: 1px solid #30333b;
+  border-radius: 4px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.record-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
 }
 
 footer {
@@ -867,6 +911,26 @@ footer {
     </div>
   </div>
 
+  <!-- LEVEL COMPLETIONS & VIDEOS MODAL -->
+  <div class="modal-backdrop hidden" id="levelRecordsModal" onclick="handleBackdropClose(event, 'levelRecordsModal')">
+    <div class="modal-card wide-modal">
+      <div class="queue-top">
+        <div>
+          <h3 id="levelRecordsTitle" style="margin-bottom:4px;">Level Records</h3>
+          <div class="helper-note" id="levelRecordsMeta" style="margin-top:0;"></div>
+        </div>
+        <button class="secondary-btn" type="button" onclick="closeLevelRecordsModal()">Close</button>
+      </div>
+
+      <div id="levelRecordsVerification" style="margin-top:12px;"></div>
+
+      <h4 style="text-transform:uppercase;font-size:10px;letter-spacing:.8px;color:#a5a5ae;margin:18px 0 6px;">
+        Approved Completions
+      </h4>
+      <div class="record-cards-list" id="levelRecordsList"></div>
+    </div>
+  </div>
+
   <!-- EDIT LEVEL MODAL -->
   <div class="modal-backdrop hidden" id="editModal">
     <div class="modal-card">
@@ -922,6 +986,7 @@ let allLevels = [];
 let approvedRecords = [];
 let pendingLevelSubs = [];
 let pendingRecords = [];
+let activeModalLevelId = null;
 let isSignUpMode = false;
 
 function escapeHTML(value) {
@@ -938,6 +1003,16 @@ function getPointsForRank(rank) {
   const r = Number(rank);
   if (!r || r < 1) return 10;
   return Math.max(10, Math.round(100 * Math.pow(0.86, r - 1)));
+}
+
+function safeURL(value) {
+  try {
+    const url = new URL(value);
+    if (url.protocol === "https:" || url.protocol === "http:") return url.href;
+  } catch {
+    return "";
+  }
+  return "";
 }
 
 function getVideoDetails(url, customThumbUrl = null) {
@@ -1022,16 +1097,6 @@ function renderVideoPreview(videoUrl, customThumbUrl = null) {
   `;
 }
 
-function safeURL(value) {
-  try {
-    const url = new URL(value);
-    if (url.protocol === "https:" || url.protocol === "http:") return url.href;
-  } catch {
-    return "";
-  }
-  return "";
-}
-
 function switchView(view) {
   const listView = document.getElementById("listView");
   const lbView = document.getElementById("leaderboardView");
@@ -1049,6 +1114,84 @@ function switchView(view) {
     listView.classList.remove("hidden");
     tabLb.classList.remove("active");
     tabList.classList.add("active");
+  }
+}
+
+function handleBackdropClose(event, modalId) {
+  if (event.target.id === modalId) {
+    document.getElementById(modalId).classList.add("hidden");
+    if (modalId === "levelRecordsModal") activeModalLevelId = null;
+  }
+}
+
+/* LEVEL RECORDS MODAL */
+
+function openLevelRecordsModal(levelId) {
+  const level = allLevels.find(l => String(l.id) === String(levelId));
+  if (!level) return;
+
+  activeModalLevelId = level.id;
+  const pts = getPointsForRank(level.rank);
+  const recsForLevel = approvedRecords.filter(r => String(r.level_id_ref) === String(level.id));
+
+  document.getElementById("levelRecordsTitle").textContent = `#${level.rank} — ${level.name} (${pts} pts)`;
+  document.getElementById("levelRecordsMeta").textContent =
+    `By ${level.creator || "Unknown"} · Verified by ${level.verifier || "Unknown"} · ID: ${level.level_id || "N/A"}`;
+
+  const verEl = document.getElementById("levelRecordsVerification");
+  if (safeURL(level.video_url)) {
+    verEl.innerHTML = `
+      <div style="font-size:11px;color:#a5a5ae;text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px;">
+        Verification Video
+      </div>
+      ${renderVideoPreview(level.video_url, level.custom_thumb_url)}
+    `;
+  } else {
+    verEl.innerHTML = "";
+  }
+
+  const listEl = document.getElementById("levelRecordsList");
+  if (!recsForLevel.length) {
+    listEl.innerHTML = `<div class="empty">No approved records on this level yet.</div>`;
+  } else {
+    listEl.innerHTML = recsForLevel.map((rec, idx) => `
+      <div class="record-card">
+        <div class="record-card-header">
+          <div>
+            <strong>#${idx + 1} ${escapeHTML(rec.player_name)}</strong>
+            <span class="pts-badge">+${pts} pts</span>
+          </div>
+          ${
+            isEditor
+              ? `<button class="delete-btn" type="button" onclick="deleteRecord(${rec.id})">Delete Record</button>`
+              : ""
+          }
+        </div>
+        ${renderVideoPreview(rec.video_url)}
+      </div>
+    `).join("");
+  }
+
+  document.getElementById("levelRecordsModal").classList.remove("hidden");
+}
+
+function closeLevelRecordsModal() {
+  activeModalLevelId = null;
+  document.getElementById("levelRecordsModal").classList.add("hidden");
+}
+
+async function deleteRecord(recordId) {
+  if (!isEditor) return alert("Access denied: Editor status required.");
+  if (!confirm("Delete this record? It will also remove its points from the leaderboard.")) return;
+
+  const { error } = await sb.from("Records").delete().eq("id", recordId);
+  if (error) {
+    return alert("Could not delete record: " + error.message);
+  }
+
+  await loadData();
+  if (activeModalLevelId !== null) {
+    openLevelRecordsModal(activeModalLevelId);
   }
 }
 
@@ -1169,7 +1312,6 @@ async function saveNewNickname() {
 
   const oldNickname = currentNickname;
 
-  // 1. Update Profiles table
   const { error: profErr } = await sb
     .from("Profiles")
     .upsert([{ id: currentUser.id, nickname: newNickname }], { onConflict: "id" });
@@ -1178,10 +1320,8 @@ async function saveNewNickname() {
     return alert("Could not update profile: " + profErr.message);
   }
 
-  // 2. Update user metadata
   await sb.auth.updateUser({ data: { nickname: newNickname } });
 
-  // 3. Cascade update across Records and Submissions
   if (oldNickname && oldNickname !== newNickname) {
     await Promise.all([
       sb.from("Records").update({ player_name: newNickname }).eq("player_name", oldNickname),
@@ -1245,7 +1385,7 @@ async function logout() {
 async function loadData() {
   const [{ data: levels, error: lvlErr }, { data: recs, error: recErr }] = await Promise.all([
     sb.from("Levels").select("*").order("rank", { ascending: true }),
-    sb.from("Records").select("*").eq("status", "approved")
+    sb.from("Records").select("*").eq("status", "approved").order("id", { ascending: true })
   ]);
 
   if (lvlErr) {
@@ -1292,13 +1432,20 @@ function renderLevels(levels) {
     return;
   }
 
+  const countByLevel = new Map();
+  for (const r of approvedRecords) {
+    const key = String(r.level_id_ref);
+    countByLevel.set(key, (countByLevel.get(key) || 0) + 1);
+  }
+
   container.innerHTML = levels.map(lvl => {
     const { type, thumbUrl } = getVideoDetails(lvl.video_url, lvl.custom_thumb_url);
     const proofURL = safeURL(lvl.video_url);
     const pts = getPointsForRank(lvl.rank);
+    const recCount = countByLevel.get(String(lvl.id)) || 0;
 
     return `
-      <div class="level-row" data-rank="${escapeHTML(lvl.rank)}">
+      <div class="level-row" data-rank="${escapeHTML(lvl.rank)}" data-open-level="${escapeHTML(lvl.id)}">
         <div class="rank">#${escapeHTML(lvl.rank)}</div>
 
         <div>
@@ -1315,10 +1462,11 @@ function renderLevels(levels) {
           <div class="level-name">
             ${escapeHTML(lvl.name)}
             <span class="pts-badge">${pts} pts</span>
+            <span class="records-count-badge">${recCount} record${recCount === 1 ? "" : "s"}</span>
           </div>
           <div class="level-meta">
             By ${escapeHTML(lvl.creator || "Unknown")} · Verified by ${escapeHTML(lvl.verifier || "Unknown")}<br>
-            <span class="level-id">ID: ${escapeHTML(lvl.level_id || "N/A")}</span>
+            <span class="level-id">ID: ${escapeHTML(lvl.level_id || "N/A")} · Click level for records &amp; videos</span>
           </div>
         </div>
 
@@ -1565,11 +1713,16 @@ async function rejectRecord(recId) {
 /* ROW ACTIONS, EDIT & DELETE */
 
 document.getElementById("list").addEventListener("click", event => {
+  if (event.target.closest("a.proof-link")) return;
+
   const editButton = event.target.closest("[data-edit]");
   if (editButton) return openEditModal(editButton.dataset.edit);
 
   const deleteButton = event.target.closest("[data-delete]");
   if (deleteButton) return deleteLevel(deleteButton.dataset.delete);
+
+  const row = event.target.closest("[data-open-level]");
+  if (row) openLevelRecordsModal(row.dataset.openLevel);
 });
 
 function openEditModal(id) {
