@@ -536,8 +536,17 @@ button {
 
 .queue-actions {
   display: flex;
+  align-items: center;
   gap: 6px;
   flex-shrink: 0;
+}
+
+.approve-rank-input {
+  width: 68px;
+  margin: 0;
+  padding: 4px 7px;
+  font-size: 11px;
+  height: 26px;
 }
 
 .video-preview-wrap {
@@ -1504,14 +1513,12 @@ function renderLeaderboard() {
     totals.set(clean, entry);
   }
 
-  // Verifiers automatically get the points for the levels they verified
   for (const lvl of allLevels) {
     if (lvl.verifier) {
       addPlayerPoints(lvl.verifier, getPointsForRank(lvl.rank), false);
     }
   }
 
-  // Approved completion records award points to players
   for (const rec of approvedRecords) {
     const lvl = levelById.get(String(rec.level_id_ref));
     if (!lvl) continue;
@@ -1636,6 +1643,14 @@ function renderEditorQueues() {
             </span>
           </div>
           <div class="queue-actions">
+            <input
+              type="number"
+              min="1"
+              class="approve-rank-input"
+              id="approveRank-${escapeHTML(sub.id)}"
+              value="${escapeHTML(sub.suggested_rank || 1)}"
+              title="Set placement rank"
+            />
             <button class="approve-btn" type="button" onclick="approveLevelSubmission(${sub.id})">Approve</button>
             <button class="delete-btn" type="button" onclick="rejectLevelSubmission(${sub.id})">Reject</button>
           </div>
@@ -1688,7 +1703,10 @@ async function approveLevelSubmission(subId) {
   const sub = pendingLevelSubs.find(s => String(s.id) === String(subId));
   if (!sub) return;
 
-  const targetRank = Math.max(1, parseInt(sub.suggested_rank, 10) || (allLevels.length + 1));
+  const rankInput = document.getElementById(`approveRank-${subId}`);
+  const chosenRank = parseInt(rankInput?.value, 10);
+  const targetRank = Math.max(1, chosenRank || parseInt(sub.suggested_rank, 10) || (allLevels.length + 1));
+
   const shiftErr = await shiftRanksDownFrom(targetRank);
   if (shiftErr) return alert("Could not shift ranks: " + shiftErr.message);
 
