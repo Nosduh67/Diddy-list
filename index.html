@@ -1,248 +1,944 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Diddy List — Challenge List</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body { background: #0b0e14; color: #e2e8f0; font-family: system-ui, sans-serif; margin: 0; padding: 20px; }
-    .container { max-width: 820px; margin: 0 auto; }
-    h1 { text-align: center; color: #818cf8; }
-    h4 { margin: 14px 0 8px; color: #cbd5e1; font-size: 0.95rem; }
-    .panel { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin-bottom: 20px; }
-    input { width: 100%; padding: 9px; margin: 6px 0; background: #0d1117; border: 1px solid #30363d; color: #fff; border-radius: 4px; box-sizing: border-box; }
-    button { padding: 10px 14px; background: #6366f1; border: none; color: #fff; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 6px; }
-    button:hover { background: #4f46e5; }
-    button.secondary { background: #30363d; }
-    button.secondary:hover { background: #3f4650; }
-    button.danger { background: #dc2626; padding: 6px 10px; font-size: 0.8rem; }
-    button.template-btn { background: #1f2937; border: 1px solid #374151; padding: 6px 10px; font-size: 0.8rem; margin-top: 0; }
-    button.template-btn:hover { border-color: #818cf8; background: #263142; }
-    .template-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
-    .template-item { display: flex; justify-content: space-between; align-items: center; background: #0d1117; border: 1px solid #262c36; border-radius: 6px; padding: 8px 12px; font-size: 0.88rem; }
-    .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 14px; }
-    .rank { font-size: 1.7rem; font-weight: 800; color: #818cf8; min-width: 56px; }
-    .info { flex-grow: 1; }
-    .title { font-size: 1.15rem; font-weight: 700; }
-    .meta { font-size: 0.85rem; color: #8b949e; margin-top: 4px; }
-    .link { color: #38bdf8; text-decoration: none; margin-right: 10px; }
-    .hidden { display: none; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diddy List — Challenge List</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root {
+  --bg: #0c0d10;
+  --surface: #13151a;
+  --surface-hover: #191c22;
+  --border: #252830;
+  --text: #e8e9ed;
+  --muted: #858995;
+  --accent: #9b83e8;
+  --accent-hover: #b09cf5;
+  --danger: #e06472;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  min-height: 100vh;
+}
+
+button, input {
+  font: inherit;
+}
+
+.container {
+  width: 100%;
+  max-width: 920px;
+  margin: auto;
+  padding: 0 22px 60px;
+}
+
+/* HEADER */
+
+header {
+  height: 66px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  background: var(--accent);
+  color: #100e16;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  font-size: 15px;
+}
+
+.header-label {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+/* PAGE INTRO */
+
+.intro {
+  padding: 48px 0 30px;
+}
+
+.intro h1 {
+  font-size: 32px;
+  letter-spacing: -1.2px;
+  margin: 0;
+  font-weight: 800;
+}
+
+.intro p {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 9px 0 0;
+}
+
+/* SECTION HEADER */
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+.section-heading h2 {
+  font-size: 16px;
+  font-weight: 750;
+  margin: 0;
+}
+
+.section-label {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+/* SEARCH */
+
+.search-wrap {
+  margin-bottom: 14px;
+}
+
+.search {
+  width: 100%;
+  height: 42px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  outline: none;
+  padding: 0 13px;
+  color: var(--text);
+  transition: border .2s;
+}
+
+.search:focus {
+  border-color: var(--accent);
+}
+
+.search::placeholder {
+  color: #686d79;
+}
+
+/* LEVEL CARDS */
+
+.level-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  min-height: 75px;
+  padding: 12px 15px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  gap: 15px;
+  transition: background .15s, border-color .15s;
+}
+
+.card:hover {
+  background: var(--surface-hover);
+  border-color: #383c48;
+}
+
+.rank {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: #1c1e25;
+  border: 1px solid #30333d;
+  border-radius: 6px;
+  color: #b2b5c0;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.card[data-rank="1"] .rank {
+  color: #e5c16e;
+  border-color: #65542d;
+  background: #252116;
+}
+
+.card[data-rank="2"] .rank {
+  color: #c3c9d3;
+  border-color: #414752;
+  background: #20232a;
+}
+
+.card[data-rank="3"] .rank {
+  color: #c99574;
+  border-color: #654635;
+  background: #271e1b;
+}
+
+.info {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 750;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.link {
+  color: #b3a0f5;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.link:hover {
+  color: white;
+}
+
+.delete-btn {
+  background: transparent;
+  border: 1px solid #533039;
+  color: var(--danger);
+  padding: 6px 9px;
+  border-radius: 5px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.delete-btn:hover {
+  background: #321b21;
+}
+
+/* EMPTY / LOADING */
+
+.empty {
+  text-align: center;
+  padding: 40px 15px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* EDITOR */
+
+.editor-panel {
+  margin-top: 35px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 20px;
+}
+
+.editor-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.editor-top h3 {
+  font-size: 15px;
+  margin: 0;
+}
+
+.editor-email {
+  color: var(--accent-hover);
+}
+
+.editor-subtitle {
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 6px;
+}
+
+.small-heading {
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 750;
+  letter-spacing: .8px;
+  color: #a4a8b4;
+  margin: 24px 0 10px;
+}
+
+.template-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.template-item {
+  background: #0d0f13;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.template-info {
+  min-width: 0;
+}
+
+.template-name {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.template-meta {
+  color: var(--muted);
+  font-size: 10px;
+  margin-top: 4px;
+}
+
+.template-btn {
+  flex-shrink: 0;
+  border: 1px solid #42375f;
+  border-radius: 5px;
+  padding: 6px 8px;
+  background: #211c30;
+  color: #c0b0f5;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.template-btn:hover {
+  background: #302541;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.form-grid input,
+.login-input {
+  width: 100%;
+  height: 39px;
+  background: #0c0e12;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: white;
+  padding: 0 11px;
+  outline: none;
+}
+
+.form-grid input:focus,
+.login-input:focus {
+  border-color: var(--accent);
+}
+
+.form-grid input::placeholder,
+.login-input::placeholder {
+  color: #707582;
+}
+
+.primary-btn {
+  background: var(--accent);
+  color: #100e16;
+  font-weight: 750;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: .15s;
+}
+
+.primary-btn:hover {
+  background: var(--accent-hover);
+}
+
+.secondary-btn {
+  background: #22252c;
+  color: var(--text);
+  border: 1px solid #343842;
+  border-radius: 6px;
+  padding: 8px 11px;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.secondary-btn:hover {
+  background: #30343d;
+}
+
+.add-btn {
+  margin-top: 12px;
+}
+
+.login-panel {
+  max-width: 400px;
+}
+
+.login-panel h3 {
+  font-size: 15px;
+  margin: 0 0 14px;
+}
+
+.login-input {
+  margin-bottom: 9px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* FOOTER */
+
+.footer {
+  border-top: 1px solid var(--border);
+  text-align: center;
+  color: #646976;
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding-top: 20px;
+  margin-top: 40px;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 600px) {
+  .container {
+    padding: 0 13px 40px;
+  }
+
+  header {
+    height: 58px;
+  }
+
+  .intro {
+    padding: 37px 0 25px;
+  }
+
+  .intro h1 {
+    font-size: 27px;
+  }
+
+  .card {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .rank {
+    width: 36px;
+    height: 38px;
+    font-size: 13px;
+  }
+
+  .title {
+    font-size: 13px;
+  }
+
+  .meta {
+    font-size: 10px;
+  }
+
+  .actions {
+    gap: 7px;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  .template-list {
+    grid-template-columns: 1fr;
+  }
+
+  .editor-panel {
+    padding: 14px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .header-label {
+    font-size: 9px;
+  }
+}
+</style>
 </head>
+
 <body>
-  <div class="container">
-    <h1>🏆 Challenge List</h1>
+<div class="container">
 
-    <!-- EDITOR LOGIN -->
-    <div class="panel" id="loginPanel">
-      <h3>Editor Login</h3>
-      <input type="email" id="loginEmail" placeholder="Editor Email" />
-      <input type="password" id="loginPassword" placeholder="Password" />
-      <button onclick="login()">Log In</button>
-    </div>
+<header>
+  <div class="logo">
+    <div class="logo-mark">D</div>
+    Diddy List
+  </div>
+  <div class="header-label">CHALLENGE LIST</div>
+</header>
 
-    <!-- EDITOR CONTROLS (Shown only when logged in) -->
-    <div class="panel hidden" id="editorPanel">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h3>➕ Add Level (<span id="editorEmail"></span>)</h3>
-        <button class="secondary" onclick="logout()">Log Out</button>
+<section class="intro">
+  <h1>Diddy List</h1>
+  <p>The official challenge list rankings.</p>
+</section>
+
+<!-- LOGIN -->
+
+<div class="editor-panel login-panel" id="loginPanel">
+  <h3>Editor Login</h3>
+  <input class="login-input" type="email" id="loginEmail"
+    placeholder="Editor Email">
+  <input class="login-input" type="password" id="loginPassword"
+    placeholder="Password">
+  <button class="primary-btn" onclick="login()">Log In</button>
+</div>
+
+<!-- EDITOR -->
+
+<div class="editor-panel hidden" id="editorPanel">
+
+  <div class="editor-top">
+    <div>
+      <h3>Add Level</h3>
+      <div class="editor-subtitle">
+        Logged in as <span class="editor-email" id="editorEmail"></span>
       </div>
-
-      <h4>Quick Level Templates (5)</h4>
-      <div class="template-list" id="templateList"></div>
-
-      <h4>Level Details</h4>
-      <input type="number" id="rank" placeholder="Rank (e.g. 1)" />
-      <input type="text" id="name" placeholder="Level Name" />
-      <input type="text" id="creator" placeholder="Creator" />
-      <input type="text" id="verifier" placeholder="Verifier" />
-      <input type="text" id="level_id" placeholder="Level ID" />
-      <input type="text" id="video_url" placeholder="Video Proof URL" />
-      <button onclick="addLevel()">Add Level</button>
     </div>
-
-    <!-- PUBLIC LIST -->
-    <div id="list">Loading levels...</div>
+    <button class="secondary-btn" onclick="logout()">Log Out</button>
   </div>
 
-  <script>
-    const SUPABASE_URL = "https://ljzeslmzanjhymscdcxk.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_0Byo8YMjM5x75UTZszUFrA_eDNew7hA";
-    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  <div class="small-heading">Quick Level Templates</div>
+  <div class="template-list" id="templateList"></div>
 
-    const LEVEL_TEMPLATES = [
-      {
-        rank: 1,
-        name: "Neon Overdrive",
-        creator: "SampleCreator1",
-        verifier: "SampleVerifier1",
-        level_id: "10000001",
-        video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-      },
-      {
-        rank: 2,
-        name: "Chronos Wave",
-        creator: "SampleCreator2",
-        verifier: "SampleVerifier2",
-        level_id: "10000002",
-        video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-      },
-      {
-        rank: 3,
-        name: "Static Pulse",
-        creator: "SampleCreator3",
-        verifier: "SampleVerifier3",
-        level_id: "10000003",
-        video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-      },
-      {
-        rank: 4,
-        name: "Vortex Corridor",
-        creator: "SampleCreator4",
-        verifier: "SampleVerifier4",
-        level_id: "10000004",
-        video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-      },
-      {
-        rank: 5,
-        name: "Eclipse Circuit",
-        creator: "SampleCreator5",
-        verifier: "SampleVerifier5",
-        level_id: "10000005",
-        video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-      }
-    ];
+  <div class="small-heading">Level Details</div>
 
-    function renderTemplates() {
-      const listEl = document.getElementById("templateList");
-      listEl.innerHTML = LEVEL_TEMPLATES.map((tpl, idx) => `
-        <div class="template-item">
-          <div>
-            <strong>#${tpl.rank} — ${tpl.name}</strong>
-            <span style="color:#8b949e;"> (by ${tpl.creator}, ID: ${tpl.level_id})</span>
-          </div>
-          <button class="template-btn" type="button" onclick="applyTemplate(${idx})">Use Template</button>
+  <div class="form-grid">
+    <input type="number" id="rank" placeholder="Rank (e.g. 1)">
+    <input type="text" id="name" placeholder="Level Name">
+    <input type="text" id="creator" placeholder="Creator">
+    <input type="text" id="verifier" placeholder="Verifier">
+    <input type="text" id="level_id" placeholder="Level ID">
+    <input type="text" id="video_url" placeholder="Video Proof URL">
+  </div>
+
+  <button class="primary-btn add-btn" onclick="addLevel()">
+    Add Level
+  </button>
+
+</div>
+
+<!-- RANKINGS -->
+
+<section style="margin-top: 38px;">
+
+  <div class="section-heading">
+    <h2>Challenge Rankings</h2>
+    <span class="section-label">LEVEL LIST</span>
+  </div>
+
+  <div class="search-wrap">
+    <input
+      class="search"
+      type="text"
+      id="searchInput"
+      placeholder="Search by level name or creator..."
+      oninput="filterLevels()"
+    >
+  </div>
+
+  <div id="list" class="level-list">
+    <div class="empty">Loading levels...</div>
+  </div>
+
+</section>
+
+<div class="footer">
+  DIDDY LIST &nbsp; · &nbsp; CHALLENGE RANKINGS
+</div>
+
+</div>
+
+<script>
+const SUPABASE_URL = "https://ljzeslmzanjhymscdcxk.supabase.co";
+const SUPABASE_KEY = "sb_publishable_0Byo8YMjM5x75UTZszUFrA_eDNew7hA";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const LEVEL_TEMPLATES = [
+  {
+    rank: 1,
+    name: "Neon Overdrive",
+    creator: "SampleCreator1",
+    verifier: "SampleVerifier1",
+    level_id: "10000001",
+    video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+  },
+  {
+    rank: 2,
+    name: "Chronos Wave",
+    creator: "SampleCreator2",
+    verifier: "SampleVerifier2",
+    level_id: "10000002",
+    video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+  },
+  {
+    rank: 3,
+    name: "Static Pulse",
+    creator: "SampleCreator3",
+    verifier: "SampleVerifier3",
+    level_id: "10000003",
+    video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+  },
+  {
+    rank: 4,
+    name: "Vortex Corridor",
+    creator: "SampleCreator4",
+    verifier: "SampleVerifier4",
+    level_id: "10000004",
+    video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+  },
+  {
+    rank: 5,
+    name: "Eclipse Circuit",
+    creator: "SampleCreator5",
+    verifier: "SampleVerifier5",
+    level_id: "10000005",
+    video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+  }
+];
+
+let currentUser = null;
+let allLevels = [];
+
+/* HTML SAFETY */
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[char]);
+}
+
+function safeURL(value) {
+  try {
+    const url = new URL(value);
+    return ["http:", "https:"].includes(url.protocol)
+      ? url.href
+      : "";
+  } catch {
+    return "";
+  }
+}
+
+/* TEMPLATES */
+
+function renderTemplates() {
+  const listEl = document.getElementById("templateList");
+
+  listEl.innerHTML = LEVEL_TEMPLATES.map((tpl, idx) => `
+    <div class="template-item">
+      <div class="template-info">
+        <div class="template-name">
+          #${tpl.rank} — ${escapeHTML(tpl.name)}
         </div>
-      `).join("");
-    }
+        <div class="template-meta">
+          By ${escapeHTML(tpl.creator)} · ID: ${escapeHTML(tpl.level_id)}
+        </div>
+      </div>
+      <button class="template-btn"
+        type="button"
+        onclick="applyTemplate(${idx})">
+        Use
+      </button>
+    </div>
+  `).join("");
+}
 
-    function applyTemplate(idx) {
-      const tpl = LEVEL_TEMPLATES[idx];
-      if (!tpl) return;
-      document.getElementById("rank").value = tpl.rank;
-      document.getElementById("name").value = tpl.name;
-      document.getElementById("creator").value = tpl.creator;
-      document.getElementById("verifier").value = tpl.verifier;
-      document.getElementById("level_id").value = tpl.level_id;
-      document.getElementById("video_url").value = tpl.video_url;
-    }
+function applyTemplate(idx) {
+  const tpl = LEVEL_TEMPLATES[idx];
+  if (!tpl) return;
 
-    let currentUser = null;
+  document.getElementById("rank").value = tpl.rank;
+  document.getElementById("name").value = tpl.name;
+  document.getElementById("creator").value = tpl.creator;
+  document.getElementById("verifier").value = tpl.verifier;
+  document.getElementById("level_id").value = tpl.level_id;
+  document.getElementById("video_url").value = tpl.video_url;
+}
 
-    function updateAuthUI() {
-      const loginPanel = document.getElementById("loginPanel");
-      const editorPanel = document.getElementById("editorPanel");
-      const editorEmail = document.getElementById("editorEmail");
+/* AUTHENTICATION */
 
-      if (currentUser) {
-        loginPanel.classList.add("hidden");
-        editorPanel.classList.remove("hidden");
-        editorEmail.textContent = currentUser.email;
-      } else {
-        loginPanel.classList.remove("hidden");
-        editorPanel.classList.add("hidden");
-      }
-      loadLevels();
-    }
+function updateAuthUI() {
+  const loginPanel = document.getElementById("loginPanel");
+  const editorPanel = document.getElementById("editorPanel");
+  const editorEmail = document.getElementById("editorEmail");
 
-    async function login() {
-      const email = document.getElementById("loginEmail").value.trim();
-      const password = document.getElementById("loginPassword").value;
-      const { error } = await sb.auth.signInWithPassword({ email, password });
-      if (error) alert("Login failed: " + error.message);
-    }
+  if (currentUser) {
+    loginPanel.classList.add("hidden");
+    editorPanel.classList.remove("hidden");
+    editorEmail.textContent = currentUser.email;
+  } else {
+    loginPanel.classList.remove("hidden");
+    editorPanel.classList.add("hidden");
+  }
 
-    async function logout() {
-      await sb.auth.signOut();
-    }
+  loadLevels();
+}
 
-    async function loadLevels() {
-      const { data: levels, error } = await sb
-        .from("Levels")
-        .select("*")
-        .order("rank", { ascending: true });
+async function login() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
 
-      const container = document.getElementById("list");
-      if (error) {
-        container.innerHTML = `<p>Error loading levels: ${error.message}</p>`;
-        return;
-      }
-      if (!levels || levels.length === 0) {
-        container.innerHTML = "<p style='text-align:center;'>No levels on the list yet.</p>";
-        return;
-      }
+  const { error } = await sb.auth.signInWithPassword({
+    email,
+    password
+  });
 
-      container.innerHTML = levels.map(lvl => `
-        <div class="card">
-          <div class="rank">#${lvl.rank}</div>
-          <div class="info">
-            <div class="title">${lvl.name ?? ""}</div>
-            <div class="meta">By ${lvl.creator ?? "Unknown"} | Verified by ${lvl.verifier ?? "Unknown"} | ID: ${lvl.level_id ?? "N/A"}</div>
+  if (error) {
+    alert("Login failed: " + error.message);
+  }
+}
+
+async function logout() {
+  await sb.auth.signOut();
+}
+
+/* LOAD LEVELS */
+
+async function loadLevels() {
+  const container = document.getElementById("list");
+
+  container.innerHTML = '<div class="empty">Loading levels...</div>';
+
+  const { data: levels, error } = await sb
+    .from("Levels")
+    .select("*")
+    .order("rank", { ascending: true });
+
+  if (error) {
+    container.innerHTML = `
+      <div class="empty">
+        Error loading levels: ${escapeHTML(error.message)}
+      </div>
+    `;
+    return;
+  }
+
+  allLevels = levels || [];
+  filterLevels();
+}
+
+/* DISPLAY LEVELS */
+
+function filterLevels() {
+  const query = document.getElementById("searchInput")
+    .value.trim().toLowerCase();
+
+  const filteredLevels = allLevels.filter(lvl => {
+    return (
+      String(lvl.name ?? "").toLowerCase().includes(query) ||
+      String(lvl.creator ?? "").toLowerCase().includes(query) ||
+      String(lvl.verifier ?? "").toLowerCase().includes(query) ||
+      String(lvl.level_id ?? "").toLowerCase().includes(query)
+    );
+  });
+
+  renderLevels(filteredLevels);
+}
+
+function renderLevels(levels) {
+  const container = document.getElementById("list");
+
+  if (!levels || levels.length === 0) {
+    container.innerHTML = `
+      <div class="empty">
+        No levels found.
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = levels.map(lvl => {
+    const proofURL = safeURL(lvl.video_url);
+
+    return `
+      <div class="card" data-rank="${escapeHTML(lvl.rank)}">
+
+        <div class="rank">
+          ${escapeHTML(lvl.rank)}
+        </div>
+
+        <div class="info">
+          <div class="title">
+            ${escapeHTML(lvl.name)}
           </div>
-          <div>
-            ${lvl.video_url ? `<a class="link" href="${lvl.video_url}" target="_blank">Proof ↗</a>` : ""}
-            ${currentUser ? `<button class="danger" onclick="deleteLevel(${lvl.id})">Delete</button>` : ""}
+
+          <div class="meta">
+            By ${escapeHTML(lvl.creator || "Unknown")}
+            &nbsp;·&nbsp;
+            Verified by ${escapeHTML(lvl.verifier || "Unknown")}
+            &nbsp;·&nbsp;
+            ID: ${escapeHTML(lvl.level_id || "N/A")}
           </div>
         </div>
-      `).join("");
-    }
 
-    async function addLevel() {
-      if (!currentUser) return alert("Log in as an editor first.");
+        <div class="actions">
 
-      const payload = {
-        rank: parseInt(document.getElementById("rank").value, 10),
-        name: document.getElementById("name").value.trim(),
-        creator: document.getElementById("creator").value.trim(),
-        verifier: document.getElementById("verifier").value.trim(),
-        level_id: document.getElementById("level_id").value.trim(),
-        video_url: document.getElementById("video_url").value.trim()
-      };
+          ${proofURL ? `
+            <a class="link"
+              href="${escapeHTML(proofURL)}"
+              target="_blank"
+              rel="noopener noreferrer">
+              Proof ↗
+            </a>
+          ` : ""}
 
-      if (!payload.rank || !payload.name) {
-        return alert("Rank and Level Name are required.");
-      }
+          ${currentUser ? `
+            <button
+              class="delete-btn"
+              data-delete="${escapeHTML(lvl.id)}">
+              Delete
+            </button>
+          ` : ""}
 
-      const { error } = await sb.from("Levels").insert([payload]);
-      if (error) {
-        alert("Could not add level: " + error.message);
-      } else {
-        ["rank", "name", "creator", "verifier", "level_id", "video_url"].forEach(id => {
-          document.getElementById(id).value = "";
-        });
-        loadLevels();
-      }
-    }
+        </div>
+      </div>
+    `;
+  }).join("");
+}
 
-    async function deleteLevel(id) {
-      if (!currentUser) return;
-      const { error } = await sb.from("Levels").delete().eq("id", id);
-      if (error) alert("Delete failed: " + error.message);
-      else loadLevels();
-    }
+/* DELETE LEVEL */
 
-    renderTemplates();
+document.getElementById("list").addEventListener("click", event => {
+  const button = event.target.closest("[data-delete]");
 
-    sb.auth.onAuthStateChange((_event, session) => {
-      currentUser = session?.user ?? null;
-      updateAuthUI();
+  if (!button) return;
+
+  deleteLevel(button.dataset.delete);
+});
+
+async function deleteLevel(id) {
+  if (!currentUser) return;
+
+  if (!confirm("Are you sure you want to delete this level?")) {
+    return;
+  }
+
+  const { error } = await sb
+    .from("Levels")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    alert("Delete failed: " + error.message);
+  } else {
+    loadLevels();
+  }
+}
+
+/* ADD LEVEL */
+
+async function addLevel() {
+  if (!currentUser) {
+    return alert("Log in as an editor first.");
+  }
+
+  const payload = {
+    rank: parseInt(document.getElementById("rank").value, 10),
+    name: document.getElementById("name").value.trim(),
+    creator: document.getElementById("creator").value.trim(),
+    verifier: document.getElementById("verifier").value.trim(),
+    level_id: document.getElementById("level_id").value.trim(),
+    video_url: document.getElementById("video_url").value.trim()
+  };
+
+  if (!payload.rank || !payload.name) {
+    return alert("Rank and Level Name are required.");
+  }
+
+  const { error } = await sb
+    .from("Levels")
+    .insert([payload]);
+
+  if (error) {
+    alert("Could not add level: " + error.message);
+  } else {
+    [
+      "rank",
+      "name",
+      "creator",
+      "verifier",
+      "level_id",
+      "video_url"
+    ].forEach(id => {
+      document.getElementById(id).value = "";
     });
 
-    sb.auth.getSession().then(({ data }) => {
-      currentUser = data.session?.user ?? null;
-      updateAuthUI();
-    });
-  </script>
+    loadLevels();
+  }
+}
+
+/* INITIALIZATION */
+
+renderTemplates();
+
+sb.auth.onAuthStateChange((_event, session) => {
+  currentUser = session?.user ?? null;
+  updateAuthUI();
+});
+
+sb.auth.getSession().then(({ data }) => {
+  currentUser = data.session?.user ?? null;
+  updateAuthUI();
+});
+</script>
+
 </body>
 </html>
