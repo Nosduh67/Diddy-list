@@ -722,15 +722,16 @@ footer {
     <p>The official Diddy List challenge rankings, records, and points leaderboard.</p>
   </div>
 
-  <!-- EDITOR LOGIN / SIGN UP -->
+  <!-- LOGIN / SIGN UP -->
   <div class="panel" id="loginPanel" style="max-width: 380px;">
     <h3 id="authTitle">Account Login</h3>
-    
+
+    <input type="text" id="signupNickname" class="hidden" placeholder="Nickname (used on records & leaderboard) *" />
     <input type="email" id="loginEmail" placeholder="Email Address" />
     <input type="password" id="loginPassword" placeholder="Password" />
-    
+
     <button class="primary-btn" id="authSubmitBtn" onclick="handleAuthSubmit()">Log In</button>
-    
+
     <div>
       <span class="auth-toggle-link" id="authToggleLink" onclick="toggleAuthMode()">
         Don't have an account? Sign Up
@@ -740,11 +741,14 @@ footer {
 
   <!-- STANDARD USER LOGGED IN BAR -->
   <div class="user-status-card hidden" id="userStatusPanel">
-    <div>Logged in as <strong id="loggedUserEmail"></strong> <span style="color:#999ca7;margin-left:6px;">(Member Account)</span></div>
+    <div>
+      Logged in as <strong id="loggedUserNickname"></strong>
+      <span style="color:#999ca7;margin-left:6px;">(<span id="loggedUserEmail"></span> · Member Account)</span>
+    </div>
     <button class="secondary-btn" onclick="logout()">Log Out</button>
   </div>
 
-  <!-- EDITOR CONTROLS & APPROVAL QUEUES (ONLY SHOWN FOR WHITELISTED EDITORS) -->
+  <!-- EDITOR CONTROLS & APPROVAL QUEUES -->
   <div class="editor-panel hidden" id="editorPanel">
     <div class="editor-header">
       <h3>Add Level <span class="editor-email" id="editorEmail"></span></h3>
@@ -808,7 +812,7 @@ footer {
       <select id="recLevelSelect">
         <option value="">Select a level...</option>
       </select>
-      <input type="text" id="recPlayerName" placeholder="Your Player Name *" />
+      <input type="text" id="recPlayerName" placeholder="Nickname (or create an account to lock yours in) *" />
       <input type="text" id="recVideoUrl" placeholder="Completion Proof URL (YouTube / Medal) *" />
       <button class="primary-btn" type="button" onclick="submitRecord()">Submit Record for Approval</button>
       <div class="helper-note">
@@ -893,6 +897,7 @@ const LEVEL_TEMPLATES = [
 ];
 
 let currentUser = null;
+let currentNickname = "";
 let isEditor = false;
 let allLevels = [];
 let approvedRecords = [];
@@ -1001,26 +1006,42 @@ function applyTemplate(idx) {
   document.getElementById("video_url").value = tpl.video_url;
 }
 
-/* AUTH & ACCOUNT CREATION */
+/* AUTH & NICKNAME ACCOUNT CREATION */
 
 function toggleAuthMode() {
   isSignUpMode = !isSignUpMode;
   const title = document.getElementById("authTitle");
   const btn = document.getElementById("authSubmitBtn");
   const toggle = document.getElementById("authToggleLink");
+  const nickInput = document.getElementById("signupNickname");
 
   if (isSignUpMode) {
     title.textContent = "Create Account";
     btn.textContent = "Sign Up";
     toggle.textContent = "Already have an account? Log In";
+    nickInput.classList.remove("hidden");
   } else {
     title.textContent = "Account Login";
     btn.textContent = "Log In";
     toggle.textContent = "Don't have an account? Sign Up";
+    nickInput.classList.add("hidden");
+  }
+}
+
+function syncRecordNicknameInput() {
+  const recPlayerInput = document.getElementById("recPlayerName");
+  if (currentUser && currentNickname) {
+    recPlayerInput.value = currentNickname;
+    recPlayerInput.readOnly = true;
+    recPlayerInput.title = "Using your account nickname";
+  } else {
+    recPlayerInput.readOnly = false;
+    recPlayerInput.title = "";
   }
 }
 
 async function handleAuthSubmit() {
+  const nickname = document.getElementById("signupNickname").value.trim();
   const email = document.getElementById("loginEmail").value.trim();
   const password = document.getElementById("loginPassword").value;
 
@@ -1029,15 +1050,27 @@ async function handleAuthSubmit() {
   }
 
   if (isSignUpMode) {
-    const { data, error } = await sb.auth.signUp({ email, password });
+    if (!nickname) {
+      return alert("Please enter a nickname for your account.");
+    }
+
+    const { data, error } = await sb.auth.signUp({
+      email,
+      password,
+      options: { data: { nickname } }
+    });
+
     if (error) {
-      alert("Sign up failed: " + error.message);
+      return alert("Sign up failed: " + error.message);
+    }
+
+    if (data?.user && data?.session) {
+      await sb.from("Profiles").upsert([{ id: data.user.id, nickname }], { onConflict: "id" });
+      currentNickname = nickname;
+      syncRecordNicknameInput();
+      alert("Account created with nickname: " + nickname);
     } else {
-      if (data?.session) {
-        alert("Account created successfully!");
-      } else {
-        alert("Account created! You can log in now.");
-      }
+      alert("Account created! Check your email if confirmation is enabled, or log in now.");
     }
   } else {
     const { error } = await sb.auth.signInWithPassword({ email, password });
@@ -1045,21 +1078,47 @@ async function handleAuthSubmit() {
   }
 }
 
+async function loadUserNickname() {
+  if (!currentUser) {
+    currentNickname = "";
+    syncRecordNicknameInput();
+    return;
+  }
+
+  const { data: profile } = await sb
+    .from("Profiles")
+    .select("nickname")
+    .eq("id", currentUser.id)
+    .maybeSingle();
+
+  currentNickname =
+    profile?.nickname ||
+    currentUser.user_metadata?.nickname ||
+    currentUser.email.split("@")[0];
+
+  if (!profile?.nickname && currentUser.user_metadata?.nickname) {
+    await sb.from("Profiles").upsert([{ id: currentUser.id, nickname: currentNickname }], { onConflict: "id" });
+  }
+
+  syncRecordNicknameInput();
+}
+
 async function updateAuthUI() {
   const loginPanel = document.getElementById("loginPanel");
   const editorPanel = document.getElementById("editorPanel");
   const userStatusPanel = document.getElementById("userStatusPanel");
   const loggedUserEmail = document.getElementById("loggedUserEmail");
+  const loggedUserNickname = document.getElementById("loggedUserNickname");
   const editorEmail = document.getElementById("editorEmail");
 
   if (currentUser) {
     loginPanel.classList.add("hidden");
+    await loadUserNickname();
 
-    // Check if logged-in user is listed in the Editors whitelist table
     const { data: editorData } = await sb
       .from("Editors")
       .select("email")
-      .eq("email", currentUser.email)
+      .ilike("email", currentUser.email)
       .maybeSingle();
 
     isEditor = !!editorData;
@@ -1067,14 +1126,17 @@ async function updateAuthUI() {
     if (isEditor) {
       userStatusPanel.classList.add("hidden");
       editorPanel.classList.remove("hidden");
-      editorEmail.textContent = `(${currentUser.email})`;
+      editorEmail.textContent = `(${currentNickname} · ${currentUser.email})`;
     } else {
       editorPanel.classList.add("hidden");
       userStatusPanel.classList.remove("hidden");
+      loggedUserNickname.textContent = currentNickname;
       loggedUserEmail.textContent = currentUser.email;
     }
   } else {
     isEditor = false;
+    currentNickname = "";
+    syncRecordNicknameInput();
     loginPanel.classList.remove("hidden");
     editorPanel.classList.add("hidden");
     userStatusPanel.classList.add("hidden");
@@ -1227,7 +1289,7 @@ async function submitLevelProposal() {
   const verifier = document.getElementById("subVerifier").value.trim();
   const levelId = document.getElementById("subLevelId").value.trim();
   const videoUrl = document.getElementById("subVideoUrl").value.trim();
-  const submitterName = document.getElementById("subAuthor").value.trim();
+  const submitterName = document.getElementById("subAuthor").value.trim() || currentNickname;
 
   if (!name) return alert("Please enter a level name.");
 
@@ -1249,16 +1311,19 @@ async function submitLevelProposal() {
       document.getElementById(id).value = "";
     });
     alert("Level submitted! Waiting for editor approval.");
+    if (isEditor) loadEditorQueues();
   }
 }
 
 async function submitRecord() {
   const levelIdRef = document.getElementById("recLevelSelect").value;
-  const playerName = document.getElementById("recPlayerName").value.trim();
+  const playerName = (currentUser && currentNickname)
+    ? currentNickname
+    : document.getElementById("recPlayerName").value.trim();
   const videoUrl = document.getElementById("recVideoUrl").value.trim();
 
   if (!levelIdRef || !playerName || !videoUrl) {
-    return alert("Please select a level, enter your player name, and provide a proof URL.");
+    return alert("Please select a level, enter a nickname, and provide a proof URL.");
   }
 
   const { error } = await sb.from("Records").insert([{
@@ -1271,10 +1336,12 @@ async function submitRecord() {
   if (error) {
     alert("Could not submit record: " + error.message);
   } else {
-    ["recPlayerName", "recVideoUrl"].forEach(id => {
-      document.getElementById(id).value = "";
-    });
-    alert("Record submitted! Waiting for editor approval.");
+    document.getElementById("recVideoUrl").value = "";
+    if (!currentUser) {
+      document.getElementById("recPlayerName").value = "";
+    }
+    alert(`Record submitted under "${playerName}"! Waiting for editor approval.`);
+    if (isEditor) loadEditorQueues();
   }
 }
 
