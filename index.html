@@ -2068,6 +2068,31 @@ async function shiftRanksDownFrom(targetRank, excludeId = null) {
   return null;
 }
 
+async function shiftRanksUpAfter(deletedRank) {
+  const { levels, error: fetchErr } = await fetchFreshLevels();
+  if (fetchErr) return fetchErr;
+
+  const levelsToPullUp = levels
+    .filter(lvl => Number(lvl.rank) > Number(deletedRank))
+    .sort((a, b) => Number(a.rank) - Number(b.rank));
+
+  for (const lvl of levelsToPullUp) {
+    const prevRank = Number(lvl.rank) - 1;
+    const { data: updatedRows, error } = await sb
+      .from("Levels")
+      .update({ rank: prevRank })
+      .eq("id", lvl.id)
+      .select("id");
+
+    if (error) return error;
+    if (!updatedRows || updatedRows.length === 0) {
+      return new Error(`Could not move "${lvl.name}" up to #${prevRank}. Check your Supabase RLS UPDATE policy on Levels.`);
+    }
+    lvl.rank = prevRank;
+  }
+  return null;
+}
+
 async function approveLevelSubmission(subId) {
   if (!isEditor) return alert("Access denied: Editor status required.");
   const sub = pendingLevelSubs.find(s => String(s.id) === String(subId));
@@ -2260,9 +2285,25 @@ async function deleteLevel(id) {
   if (!isEditor) return alert("Access denied: Editor status required.");
   if (!confirm("Are you sure you want to delete this level?")) return;
 
+  const { levels, error: fetchErr } = await fetchFreshLevels();
+  if (fetchErr) return alert("Could not load levels before delete: " + fetchErr.message);
+
+  const target = levels.find(item => String(item.id) === String(id));
+  const deletedRank = target ? Number(target.rank) : null;
+
   const { error } = await sb.from("Levels").delete().eq("id", id);
-  if (error) alert("Delete failed: " + error.message);
-  else await loadData();
+  if (error) {
+    return alert("Delete failed: " + error.message);
+  }
+
+  if (deletedRank !== null) {
+    const shiftErr = await shiftRanksUpAfter(deletedRank);
+    if (shiftErr) {
+      alert("Level deleted, but could not shift remaining ranks up: " + shiftErr.message);
+    }
+  }
+
+  await loadData();
 }
 
 async function addLevel() {
