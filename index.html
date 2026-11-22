@@ -140,6 +140,7 @@ header {
   margin: 0;
   font-size: 17px;
   font-weight: 750;
+  outline: none;
 }
 
 .search-box {
@@ -953,7 +954,7 @@ footer {
   <!-- LIST VIEW -->
   <div id="listView">
     <div class="list-toolbar">
-      <h2>Challenge Rankings</h2>
+      <h2 id="listHeading" tabindex="-1">Challenge Rankings</h2>
       <input
         type="text"
         class="search-box"
@@ -978,7 +979,7 @@ footer {
   <!-- LEADERBOARD VIEW -->
   <div id="leaderboardView" class="hidden">
     <div class="list-toolbar">
-      <h2>Points Leaderboard</h2>
+      <h2 id="leaderboardHeading" tabindex="-1">Points Leaderboard</h2>
       <span class="helper-note" style="margin-top:0;">Click any player to view their hardest &amp; other completions</span>
     </div>
     <div class="level-list" id="leaderboardList">
@@ -989,7 +990,7 @@ footer {
   <!-- PLAYERS SEARCH & DIRECTORY VIEW -->
   <div id="playersView" class="hidden">
     <div class="list-toolbar">
-      <h2>Search Players</h2>
+      <h2 id="playersHeading" tabindex="-1">Search Players</h2>
       <input
         type="text"
         class="search-box"
@@ -1260,17 +1261,27 @@ function switchView(view) {
   tabLb.classList.remove("active");
   tabPlayers.classList.remove("active");
 
+  let headingToFocus = null;
+
   if (view === "leaderboard") {
     lbView.classList.remove("hidden");
     tabLb.classList.add("active");
     renderLeaderboard();
+    headingToFocus = document.getElementById("leaderboardHeading");
   } else if (view === "players") {
     playersView.classList.remove("hidden");
     tabPlayers.classList.add("active");
     renderPlayersDirectory();
+    headingToFocus = document.getElementById("playersHeading");
   } else {
     listView.classList.remove("hidden");
     tabList.classList.add("active");
+    headingToFocus = document.getElementById("listHeading");
+  }
+
+  window.scrollTo({ top: 0, behavior: "instant" });
+  if (headingToFocus) {
+    headingToFocus.focus({ preventScroll: true });
   }
 }
 
