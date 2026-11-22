@@ -3,18 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Challenge List</title>
+  <title>Diddy List — Challenge List</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body { background: #0b0e14; color: #e2e8f0; font-family: system-ui, sans-serif; margin: 0; padding: 20px; }
     .container { max-width: 820px; margin: 0 auto; }
     h1 { text-align: center; color: #818cf8; }
+    h4 { margin: 14px 0 8px; color: #cbd5e1; font-size: 0.95rem; }
     .panel { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin-bottom: 20px; }
     input { width: 100%; padding: 9px; margin: 6px 0; background: #0d1117; border: 1px solid #30363d; color: #fff; border-radius: 4px; box-sizing: border-box; }
     button { padding: 10px 14px; background: #6366f1; border: none; color: #fff; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 6px; }
     button:hover { background: #4f46e5; }
     button.secondary { background: #30363d; }
+    button.secondary:hover { background: #3f4650; }
     button.danger { background: #dc2626; padding: 6px 10px; font-size: 0.8rem; }
+    button.template-btn { background: #1f2937; border: 1px solid #374151; padding: 6px 10px; font-size: 0.8rem; margin-top: 0; }
+    button.template-btn:hover { border-color: #818cf8; background: #263142; }
+    .template-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+    .template-item { display: flex; justify-content: space-between; align-items: center; background: #0d1117; border: 1px solid #262c36; border-radius: 6px; padding: 8px 12px; font-size: 0.88rem; }
     .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 14px; }
     .rank { font-size: 1.7rem; font-weight: 800; color: #818cf8; min-width: 56px; }
     .info { flex-grow: 1; }
@@ -42,6 +48,11 @@
         <h3>➕ Add Level (<span id="editorEmail"></span>)</h3>
         <button class="secondary" onclick="logout()">Log Out</button>
       </div>
+
+      <h4>Quick Level Templates (5)</h4>
+      <div class="template-list" id="templateList"></div>
+
+      <h4>Level Details</h4>
       <input type="number" id="rank" placeholder="Rank (e.g. 1)" />
       <input type="text" id="name" placeholder="Level Name" />
       <input type="text" id="creator" placeholder="Creator" />
@@ -59,6 +70,73 @@
     const SUPABASE_URL = "https://ljzeslmanzjhymsdcxkx.supabase.co";
     const SUPABASE_KEY = "sb_publishable_0Byo8YMjM5x75UTZszUFrA_eDNew7hA";
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const LEVEL_TEMPLATES = [
+      {
+        rank: 1,
+        name: "Neon Overdrive",
+        creator: "SampleCreator1",
+        verifier: "SampleVerifier1",
+        level_id: "10000001",
+        video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      },
+      {
+        rank: 2,
+        name: "Chronos Wave",
+        creator: "SampleCreator2",
+        verifier: "SampleVerifier2",
+        level_id: "10000002",
+        video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      },
+      {
+        rank: 3,
+        name: "Static Pulse",
+        creator: "SampleCreator3",
+        verifier: "SampleVerifier3",
+        level_id: "10000003",
+        video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      },
+      {
+        rank: 4,
+        name: "Vortex Corridor",
+        creator: "SampleCreator4",
+        verifier: "SampleVerifier4",
+        level_id: "10000004",
+        video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      },
+      {
+        rank: 5,
+        name: "Eclipse Circuit",
+        creator: "SampleCreator5",
+        verifier: "SampleVerifier5",
+        level_id: "10000005",
+        video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      }
+    ];
+
+    function renderTemplates() {
+      const listEl = document.getElementById("templateList");
+      listEl.innerHTML = LEVEL_TEMPLATES.map((tpl, idx) => `
+        <div class="template-item">
+          <div>
+            <strong>#${tpl.rank} — ${tpl.name}</strong>
+            <span style="color:#8b949e;"> (by ${tpl.creator}, ID: ${tpl.level_id})</span>
+          </div>
+          <button class="template-btn" type="button" onclick="applyTemplate(${idx})">Use Template</button>
+        </div>
+      `).join("");
+    }
+
+    function applyTemplate(idx) {
+      const tpl = LEVEL_TEMPLATES[idx];
+      if (!tpl) return;
+      document.getElementById("rank").value = tpl.rank;
+      document.getElementById("name").value = tpl.name;
+      document.getElementById("creator").value = tpl.creator;
+      document.getElementById("verifier").value = tpl.verifier;
+      document.getElementById("level_id").value = tpl.level_id;
+      document.getElementById("video_url").value = tpl.video_url;
+    }
 
     let currentUser = null;
 
@@ -153,6 +231,8 @@
       if (error) alert("Delete failed: " + error.message);
       else loadLevels();
     }
+
+    renderTemplates();
 
     sb.auth.onAuthStateChange((_event, session) => {
       currentUser = session?.user ?? null;
