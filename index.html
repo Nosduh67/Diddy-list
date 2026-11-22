@@ -49,10 +49,13 @@ header {
   height: 65px;
   background: var(--header);
   border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 
 .header-inner {
-  max-width: 1050px;
+  max-width: 1280px;
   height: 100%;
   margin: auto;
   padding: 0 22px;
@@ -94,8 +97,9 @@ header {
   background: transparent;
   border: 1px solid transparent;
   color: #c1b0e5;
-  padding: 6px 10px;
+  padding: 6px 12px;
   border-radius: 4px;
+  transition: background .12s, border-color .12s, color .12s;
 }
 
 .nav-btn:hover,
@@ -108,9 +112,9 @@ header {
 /* PAGE TITLE */
 
 .page-heading {
-  padding: 35px 0 23px;
+  padding: 32px 0 20px;
   border-bottom: 1px solid var(--border);
-  margin-bottom: 25px;
+  margin-bottom: 24px;
 }
 
 .page-heading h1 {
@@ -167,10 +171,10 @@ header {
 
 .column-headings {
   display: grid;
-  grid-template-columns: 55px 116px minmax(0, 1fr) 170px;
+  grid-template-columns: 56px 176px minmax(0, 1fr) 170px;
   align-items: center;
-  gap: 13px;
-  padding: 10px 13px;
+  gap: 15px;
+  padding: 10px 14px;
   background: #191b21;
   border: 1px solid var(--border);
   border-bottom: none;
@@ -195,11 +199,11 @@ header {
 
 .level-row {
   display: grid;
-  grid-template-columns: 55px 116px minmax(0, 1fr) 170px;
+  grid-template-columns: 56px 176px minmax(0, 1fr) 170px;
   align-items: center;
-  gap: 13px;
-  min-height: 84px;
-  padding: 10px 13px;
+  gap: 15px;
+  min-height: 118px;
+  padding: 12px 14px;
   background: #1b1d23;
   border-bottom: 1px solid #30323a;
   transition: background .12s;
@@ -237,20 +241,20 @@ header {
 
 .thumbnail {
   display: block;
-  width: 116px;
-  height: 65px;
+  width: 176px;
+  height: 99px;
   object-fit: cover;
   background: #101116;
   border: 1px solid #41434b;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 .thumbnail-placeholder {
-  width: 116px;
-  height: 65px;
+  width: 176px;
+  height: 99px;
   background: #15171d;
   border: 1px solid #30333b;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 /* LEVEL INFORMATION */
@@ -260,7 +264,7 @@ header {
 }
 
 .level-name {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 750;
   color: #e9e9ed;
   overflow-wrap: anywhere;
@@ -629,30 +633,171 @@ button {
   font-size: 13px;
 }
 
-/* LEADERBOARD & PLAYERS */
+/* CCCL-STYLE SPLIT WORKSPACE (LEADERBOARD & PLAYERS) */
 
-.lb-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  background: #1b1d23;
-  border-bottom: 1px solid #30323a;
-  cursor: pointer;
-  transition: background .12s;
+.split-tab-shell {
+  max-width: 1280px;
+  margin: 0 auto;
+  min-height: calc(100vh - 65px);
+  display: grid;
+  grid-template-columns: 330px minmax(0, 1fr);
 }
 
-.lb-row:last-child {
+.split-sidebar {
+  background: #15171d;
+  border-right: 1px solid var(--border);
+  padding: 18px 14px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.split-sidebar-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  outline: none;
+}
+
+.split-sidebar .search-box {
+  width: 100%;
+  height: 36px;
+  font-size: 12px;
+}
+
+.sidebar-player-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.sidebar-player-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 11px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background .12s;
+  border: 1px solid transparent;
+}
+
+.sidebar-player-item:hover {
+  background: #20232c;
+}
+
+.sidebar-player-item.active {
+  background: #2b2638;
+  border-color: #5b4980;
+}
+
+.sidebar-player-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.sidebar-rank {
+  color: #8f93a0;
+  font-size: 12px;
+  font-weight: 700;
+  width: 32px;
+  flex-shrink: 0;
+}
+
+.sidebar-pts-subtle {
+  color: #a99fd1;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.sidebar-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ececf2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.split-detail-pane {
+  padding: 28px 34px 56px;
+  min-width: 0;
+  background: var(--background);
+}
+
+.cccl-player-header {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 18px;
+  margin-bottom: 22px;
+}
+
+.cccl-player-title {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -.5px;
+  color: #ffffff;
+}
+
+.cccl-player-points {
+  margin-top: 8px;
+  font-size: 18px;
+  font-weight: 750;
+  color: #c9b5ec;
+}
+
+.cccl-section-heading {
+  margin: 24px 0 12px;
+  font-size: 20px;
+  font-weight: 800;
+  color: #f0f0f5;
+}
+
+.cccl-completed-list {
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  overflow: hidden;
+  background: #1b1d23;
+}
+
+.cccl-completed-row {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 16px;
+  border-bottom: 1px solid #2d3038;
+  transition: background .12s;
+  cursor: pointer;
+}
+
+.cccl-completed-row:last-child {
   border-bottom: none;
 }
 
-.lb-row:hover {
-  background: #24262e;
+.cccl-completed-row:hover {
+  background: #242730;
 }
 
-.lb-points {
+.cccl-comp-rank {
+  font-weight: 800;
+  color: #9fa3b0;
+  font-size: 14px;
+}
+
+.cccl-comp-name {
   font-weight: 750;
+  font-size: 14px;
+  color: #ececf2;
+}
+
+.cccl-comp-pts {
+  font-weight: 800;
+  font-size: 14px;
   color: #c9b5ec;
   white-space: nowrap;
 }
@@ -660,8 +805,8 @@ button {
 .hardest-highlight {
   background: #181622;
   border: 1px solid #4d3f69;
-  border-radius: 4px;
-  padding: 12px;
+  border-radius: 5px;
+  padding: 14px;
   margin-top: 8px;
 }
 
@@ -739,6 +884,24 @@ footer {
   text-align: center;
 }
 
+@media (max-width: 860px) {
+  .split-tab-shell {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .split-sidebar {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .split-detail-pane {
+    padding: 20px 16px 40px;
+  }
+}
+
 @media (max-width: 750px) {
   .two-col-forms {
     grid-template-columns: 1fr;
@@ -781,16 +944,16 @@ footer {
   }
 
   .level-row {
-    grid-template-columns: 35px 82px minmax(0, 1fr);
-    gap: 9px;
-    padding: 9px;
-    min-height: 77px;
+    grid-template-columns: 36px 116px minmax(0, 1fr);
+    gap: 10px;
+    padding: 10px;
+    min-height: 88px;
   }
 
   .thumbnail,
   .thumbnail-placeholder {
-    width: 82px;
-    height: 50px;
+    width: 116px;
+    height: 65px;
   }
 
   .rank {
@@ -798,11 +961,11 @@ footer {
   }
 
   .level-name {
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .level-meta {
-    font-size: 9px;
+    font-size: 10px;
     margin-top: 4px;
   }
 
@@ -842,117 +1005,117 @@ footer {
 
 <datalist id="signedUpUsersList"></datalist>
 
-<div class="container">
+<!-- LIST TAB VIEW -->
+<div id="listView">
+  <div class="container">
 
-  <div class="page-heading">
-    <h1>Diddy List</h1>
-    <p>The official Diddy List challenge rankings, records, and points leaderboard.</p>
-  </div>
-
-  <!-- LOGIN / SIGN UP -->
-  <div class="panel" id="loginPanel" style="max-width: 380px;">
-    <h3 id="authTitle">Account Login</h3>
-
-    <input type="text" id="signupNickname" class="hidden" placeholder="Nickname (used on records & leaderboard) *" />
-    <input type="email" id="loginEmail" placeholder="Email Address" />
-    <input type="password" id="loginPassword" placeholder="Password" />
-
-    <button class="primary-btn" id="authSubmitBtn" onclick="handleAuthSubmit()">Log In</button>
-
-    <div>
-      <span class="auth-toggle-link" id="authToggleLink" onclick="toggleAuthMode()">
-        Don't have an account? Sign Up
-      </span>
+    <div class="page-heading">
+      <h1>Diddy List</h1>
+      <p>The official Diddy List challenge rankings, records, and points leaderboard.</p>
     </div>
-  </div>
 
-  <!-- STANDARD USER LOGGED IN BAR -->
-  <div class="user-status-card hidden" id="userStatusPanel">
-    <div>
-      Logged in as <strong id="loggedUserNickname"></strong>
-      <span style="color:#999ca7;margin-left:6px;">(<span id="loggedUserEmail"></span> · Member Account)</span>
-    </div>
-    <div class="user-status-actions">
-      <button class="secondary-btn" onclick="openNicknameModal()">Change Nickname</button>
-      <button class="secondary-btn" onclick="logout()">Log Out</button>
-    </div>
-  </div>
+    <!-- LOGIN / SIGN UP -->
+    <div class="panel" id="loginPanel" style="max-width: 380px;">
+      <h3 id="authTitle">Account Login</h3>
 
-  <!-- EDITOR CONTROLS & APPROVAL QUEUES -->
-  <div class="editor-panel hidden" id="editorPanel">
-    <div class="editor-header">
-      <h3>Editor Panel <span class="editor-email" id="editorEmail"></span></h3>
+      <input type="text" id="signupNickname" class="hidden" placeholder="Nickname (used on records & leaderboard) *" />
+      <input type="email" id="loginEmail" placeholder="Email Address" />
+      <input type="password" id="loginPassword" placeholder="Password" />
+
+      <button class="primary-btn" id="authSubmitBtn" onclick="handleAuthSubmit()">Log In</button>
+
+      <div>
+        <span class="auth-toggle-link" id="authToggleLink" onclick="toggleAuthMode()">
+          Don't have an account? Sign Up
+        </span>
+      </div>
+    </div>
+
+    <!-- STANDARD USER LOGGED IN BAR -->
+    <div class="user-status-card hidden" id="userStatusPanel">
+      <div>
+        Logged in as <strong id="loggedUserNickname"></strong>
+        <span style="color:#999ca7;margin-left:6px;">(<span id="loggedUserEmail"></span> · Member Account)</span>
+      </div>
       <div class="user-status-actions">
         <button class="secondary-btn" onclick="openNicknameModal()">Change Nickname</button>
         <button class="secondary-btn" onclick="logout()">Log Out</button>
       </div>
     </div>
 
-    <div class="editor-section">
-      <h4>Pending Level Submissions</h4>
-      <div class="queue-list" id="pendingLevelsQueue">
-        <div class="empty">No pending level submissions.</div>
+    <!-- EDITOR CONTROLS & APPROVAL QUEUES -->
+    <div class="editor-panel hidden" id="editorPanel">
+      <div class="editor-header">
+        <h3>Editor Panel <span class="editor-email" id="editorEmail"></span></h3>
+        <div class="user-status-actions">
+          <button class="secondary-btn" onclick="openNicknameModal()">Change Nickname</button>
+          <button class="secondary-btn" onclick="logout()">Log Out</button>
+        </div>
+      </div>
+
+      <div class="editor-section">
+        <h4>Pending Level Submissions</h4>
+        <div class="queue-list" id="pendingLevelsQueue">
+          <div class="empty">No pending level submissions.</div>
+        </div>
+      </div>
+
+      <div class="editor-section">
+        <h4>Pending Record Submissions</h4>
+        <div class="queue-list" id="pendingRecordsQueue">
+          <div class="empty">No pending records.</div>
+        </div>
+      </div>
+
+      <div class="editor-section">
+        <h4>Add Level Directly</h4>
+        <div class="form-grid">
+          <input type="number" id="rank" min="1" placeholder="Rank (e.g. 1)" />
+          <input type="text" id="name" placeholder="Level Name" />
+          <input type="text" id="creator" placeholder="Creator" />
+          <input type="text" id="verifier" list="signedUpUsersList" placeholder="Search or type Verifier (gets level pts)" />
+          <input type="text" id="level_id" placeholder="Level ID" />
+          <input type="text" id="video_url" placeholder="Video Proof URL" />
+          <input type="text" id="custom_thumb_url" placeholder="Custom Thumbnail URL (Direct .png/.jpg link)" style="grid-column: span 2;" />
+        </div>
+        <button class="primary-btn" onclick="addLevel()">Add Level</button>
+        <div class="helper-note">
+          Adding a level at an existing rank automatically pushes levels at or below that rank down by 1.
+        </div>
       </div>
     </div>
 
-    <div class="editor-section">
-      <h4>Pending Record Submissions</h4>
-      <div class="queue-list" id="pendingRecordsQueue">
-        <div class="empty">No pending records.</div>
+    <!-- PUBLIC SUBMISSION FORMS -->
+    <div class="two-col-forms">
+      <div class="panel" style="margin-bottom:0;">
+        <h3>Submit a Level</h3>
+        <div class="form-grid">
+          <input type="text" id="subName" placeholder="Level Name *" />
+          <input type="number" id="subRank" min="1" placeholder="Suggested Rank (e.g. 1)" />
+          <input type="text" id="subCreator" placeholder="Creator" />
+          <input type="text" id="subVerifier" placeholder="Verifier" />
+          <input type="text" id="subLevelId" placeholder="Level ID" />
+          <input type="text" id="subVideoUrl" placeholder="Verification Video URL" />
+          <input type="text" id="subCustomThumb" placeholder="Custom Thumbnail URL (Direct .png/.jpg link)" style="grid-column: span 2;" />
+        </div>
+        <input type="text" id="subAuthor" placeholder="Your Name / Handle (optional)" />
+        <button class="primary-btn" type="button" onclick="submitLevelProposal()">Submit Level for Approval</button>
+      </div>
+
+      <div class="panel" style="margin-bottom:0;">
+        <h3>Submit a Record</h3>
+        <select id="recLevelSelect">
+          <option value="">Select a level...</option>
+        </select>
+        <input type="text" id="recPlayerName" placeholder="Nickname (or create an account to lock yours in) *" />
+        <input type="text" id="recVideoUrl" placeholder="Completion Proof URL (YouTube / Medal) *" />
+        <button class="primary-btn" type="button" onclick="submitRecord()">Submit Record for Approval</button>
+        <div class="helper-note">
+          Points are awarded once an editor approves your record (#1 = 100 pts, #2 = 85 pts, #3 = 72 pts, etc.). Verifiers also receive full level points.
+        </div>
       </div>
     </div>
 
-    <div class="editor-section">
-      <h4>Add Level Directly</h4>
-      <div class="form-grid">
-        <input type="number" id="rank" min="1" placeholder="Rank (e.g. 1)" />
-        <input type="text" id="name" placeholder="Level Name" />
-        <input type="text" id="creator" placeholder="Creator" />
-        <input type="text" id="verifier" list="signedUpUsersList" placeholder="Search or type Verifier (gets level pts)" />
-        <input type="text" id="level_id" placeholder="Level ID" />
-        <input type="text" id="video_url" placeholder="Video Proof URL" />
-        <input type="text" id="custom_thumb_url" placeholder="Custom Thumbnail URL (Direct .png/.jpg link)" style="grid-column: span 2;" />
-      </div>
-      <button class="primary-btn" onclick="addLevel()">Add Level</button>
-      <div class="helper-note">
-        Adding a level at an existing rank automatically pushes levels at or below that rank down by 1.
-      </div>
-    </div>
-  </div>
-
-  <!-- PUBLIC SUBMISSION FORMS -->
-  <div class="two-col-forms">
-    <div class="panel" style="margin-bottom:0;">
-      <h3>Submit a Level</h3>
-      <div class="form-grid">
-        <input type="text" id="subName" placeholder="Level Name *" />
-        <input type="number" id="subRank" min="1" placeholder="Suggested Rank (e.g. 1)" />
-        <input type="text" id="subCreator" placeholder="Creator" />
-        <input type="text" id="subVerifier" placeholder="Verifier" />
-        <input type="text" id="subLevelId" placeholder="Level ID" />
-        <input type="text" id="subVideoUrl" placeholder="Verification Video URL" />
-        <input type="text" id="subCustomThumb" placeholder="Custom Thumbnail URL (Direct .png/.jpg link)" style="grid-column: span 2;" />
-      </div>
-      <input type="text" id="subAuthor" placeholder="Your Name / Handle (optional)" />
-      <button class="primary-btn" type="button" onclick="submitLevelProposal()">Submit Level for Approval</button>
-    </div>
-
-    <div class="panel" style="margin-bottom:0;">
-      <h3>Submit a Record</h3>
-      <select id="recLevelSelect">
-        <option value="">Select a level...</option>
-      </select>
-      <input type="text" id="recPlayerName" placeholder="Nickname (or create an account to lock yours in) *" />
-      <input type="text" id="recVideoUrl" placeholder="Completion Proof URL (YouTube / Medal) *" />
-      <button class="primary-btn" type="button" onclick="submitRecord()">Submit Record for Approval</button>
-      <div class="helper-note">
-        Points are awarded once an editor approves your record (#1 = 100 pts, #2 = 85 pts, #3 = 72 pts, etc.). Verifiers also receive full level points.
-      </div>
-    </div>
-  </div>
-
-  <!-- LIST VIEW -->
-  <div id="listView">
     <div class="list-toolbar">
       <h2 id="listHeading" tabindex="-1">Challenge Rankings</h2>
       <input
@@ -974,122 +1137,113 @@ footer {
     <div class="level-list" id="list">
       <div class="empty">Loading levels...</div>
     </div>
-  </div>
 
-  <!-- LEADERBOARD VIEW -->
-  <div id="leaderboardView" class="hidden">
-    <div class="list-toolbar">
-      <h2 id="leaderboardHeading" tabindex="-1">Points Leaderboard</h2>
-      <span class="helper-note" style="margin-top:0;">Click any player to view their hardest &amp; other completions</span>
-    </div>
-    <div class="level-list" id="leaderboardList">
+    <footer>
+      DIDDY LIST · CHALLENGE RANKINGS
+    </footer>
+
+  </div>
+</div>
+
+<!-- LEADERBOARD TAB VIEW (CCCL SPLIT WORKSPACE) -->
+<div id="leaderboardView" class="split-tab-shell hidden">
+  <aside class="split-sidebar">
+    <h2 class="split-sidebar-title" id="leaderboardHeading" tabindex="-1">Leaderboard</h2>
+    <input
+      type="text"
+      class="search-box"
+      id="leaderboardSearchInput"
+      placeholder="Search player..."
+      oninput="renderLeaderboard()"
+    />
+    <div class="sidebar-player-list" id="leaderboardList">
       <div class="empty">Loading leaderboard...</div>
     </div>
-  </div>
+  </aside>
 
-  <!-- PLAYERS SEARCH & DIRECTORY VIEW -->
-  <div id="playersView" class="hidden">
-    <div class="list-toolbar">
-      <h2 id="playersHeading" tabindex="-1">Search Players</h2>
-      <input
-        type="text"
-        class="search-box"
-        id="playerSearchInput"
-        placeholder="Search username..."
-        oninput="renderPlayersDirectory()"
-      />
-    </div>
-    <div class="level-list" id="playersList">
+  <main class="split-detail-pane" id="leaderboardDetailPane">
+    <div class="empty">Select a player on the left to inspect their profile &amp; completions.</div>
+  </main>
+</div>
+
+<!-- PLAYERS TAB VIEW (CCCL SPLIT WORKSPACE) -->
+<div id="playersView" class="split-tab-shell hidden">
+  <aside class="split-sidebar">
+    <h2 class="split-sidebar-title" id="playersHeading" tabindex="-1">Players</h2>
+    <input
+      type="text"
+      class="search-box"
+      id="playerSearchInput"
+      placeholder="Search username..."
+      oninput="renderPlayersDirectory()"
+    />
+    <div class="sidebar-player-list" id="playersList">
       <div class="empty">Loading players...</div>
     </div>
-  </div>
+  </aside>
 
-  <!-- PLAYER PROFILE MODAL (HARDEST + ALL COMPLETIONS) -->
-  <div class="modal-backdrop hidden" id="playerProfileModal" onclick="handleBackdropClose(event, 'playerProfileModal')">
-    <div class="modal-card wide-modal">
-      <div class="queue-top">
-        <div>
-          <h3 id="playerProfileName" style="margin-bottom:4px;">Player Profile</h3>
-          <div class="helper-note" id="playerProfileStats" style="margin-top:0;"></div>
-        </div>
-        <button class="secondary-btn" type="button" onclick="closePlayerProfileModal()">Close</button>
+  <main class="split-detail-pane" id="playersDetailPane">
+    <div class="empty">Select a player on the left to view their completions.</div>
+  </main>
+</div>
+
+<!-- LEVEL COMPLETIONS & VIDEOS MODAL -->
+<div class="modal-backdrop hidden" id="levelRecordsModal" onclick="handleBackdropClose(event, 'levelRecordsModal')">
+  <div class="modal-card wide-modal">
+    <div class="queue-top">
+      <div>
+        <h3 id="levelRecordsTitle" style="margin-bottom:4px;">Level Records</h3>
+        <div class="helper-note" id="levelRecordsMeta" style="margin-top:0;"></div>
       </div>
+      <button class="secondary-btn" type="button" onclick="closeLevelRecordsModal()">Close</button>
+    </div>
 
-      <h4 style="text-transform:uppercase;font-size:10px;letter-spacing:.8px;color:#a5a5ae;margin:16px 0 6px;">
-        Hardest Completion
-      </h4>
-      <div id="playerHardestCompletion"></div>
+    <div id="levelRecordsVerification" style="margin-top:12px;"></div>
 
-      <h4 style="text-transform:uppercase;font-size:10px;letter-spacing:.8px;color:#a5a5ae;margin:18px 0 6px;">
-        All Completions
-      </h4>
-      <div class="record-cards-list" id="playerAllCompletions"></div>
+    <h4 style="text-transform:uppercase;font-size:10px;letter-spacing:.8px;color:#a5a5ae;margin:18px 0 6px;">
+      Approved Completions
+    </h4>
+    <div class="record-cards-list" id="levelRecordsList"></div>
+  </div>
+</div>
+
+<!-- EDIT LEVEL MODAL -->
+<div class="modal-backdrop hidden" id="editModal">
+  <div class="modal-card">
+    <h3>Edit Published Level</h3>
+    <input type="hidden" id="editRowId" />
+    <div class="form-grid">
+      <input type="number" id="editRank" min="1" placeholder="Rank" />
+      <input type="text" id="editName" placeholder="Level Name" />
+      <input type="text" id="editCreator" placeholder="Creator" />
+      <input type="text" id="editVerifier" list="signedUpUsersList" placeholder="Search or select Verifier" />
+      <input type="text" id="editLevelId" placeholder="Level ID" />
+      <input type="text" id="editVideoUrl" placeholder="Video Proof URL" />
+      <input type="text" id="editCustomThumb" placeholder="Custom Thumbnail URL (Direct .png/.jpg link)" style="grid-column: span 2;" />
+    </div>
+    <div class="helper-note">
+      Changing the Verifier automatically transfers the level's verifier points and completion credit to that user.
+    </div>
+    <div class="modal-actions">
+      <button class="secondary-btn" type="button" onclick="closeEditModal()">Cancel</button>
+      <button class="primary-btn" type="button" onclick="saveEditedLevel()">Save Changes</button>
     </div>
   </div>
+</div>
 
-  <!-- LEVEL COMPLETIONS & VIDEOS MODAL -->
-  <div class="modal-backdrop hidden" id="levelRecordsModal" onclick="handleBackdropClose(event, 'levelRecordsModal')">
-    <div class="modal-card wide-modal">
-      <div class="queue-top">
-        <div>
-          <h3 id="levelRecordsTitle" style="margin-bottom:4px;">Level Records</h3>
-          <div class="helper-note" id="levelRecordsMeta" style="margin-top:0;"></div>
-        </div>
-        <button class="secondary-btn" type="button" onclick="closeLevelRecordsModal()">Close</button>
-      </div>
-
-      <div id="levelRecordsVerification" style="margin-top:12px;"></div>
-
-      <h4 style="text-transform:uppercase;font-size:10px;letter-spacing:.8px;color:#a5a5ae;margin:18px 0 6px;">
-        Approved Completions
-      </h4>
-      <div class="record-cards-list" id="levelRecordsList"></div>
+<!-- CHANGE NICKNAME MODAL -->
+<div class="modal-backdrop hidden" id="nicknameModal">
+  <div class="modal-card">
+    <h3>Change Account Nickname</h3>
+    <input type="text" id="newNicknameInput" placeholder="Enter new nickname *" />
+    <div class="helper-note">
+      Updating your nickname will instantly update all of your past completions, verifications, and leaderboard points.
+    </div>
+    <div class="modal-actions">
+      <button class="secondary-btn" type="button" onclick="closeNicknameModal()">Cancel</button>
+      <button class="primary-btn" type="button" onclick="saveNewNickname()">Save Nickname</button>
     </div>
   </div>
-
-  <!-- EDIT LEVEL MODAL -->
-  <div class="modal-backdrop hidden" id="editModal">
-    <div class="modal-card">
-      <h3>Edit Published Level</h3>
-      <input type="hidden" id="editRowId" />
-      <div class="form-grid">
-        <input type="number" id="editRank" min="1" placeholder="Rank" />
-        <input type="text" id="editName" placeholder="Level Name" />
-        <input type="text" id="editCreator" placeholder="Creator" />
-        <input type="text" id="editVerifier" list="signedUpUsersList" placeholder="Search or select Verifier" />
-        <input type="text" id="editLevelId" placeholder="Level ID" />
-        <input type="text" id="editVideoUrl" placeholder="Video Proof URL" />
-        <input type="text" id="editCustomThumb" placeholder="Custom Thumbnail URL (Direct .png/.jpg link)" style="grid-column: span 2;" />
-      </div>
-      <div class="helper-note">
-        Changing the Verifier automatically transfers the level's verifier points and completion credit to that user.
-      </div>
-      <div class="modal-actions">
-        <button class="secondary-btn" type="button" onclick="closeEditModal()">Cancel</button>
-        <button class="primary-btn" type="button" onclick="saveEditedLevel()">Save Changes</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- CHANGE NICKNAME MODAL -->
-  <div class="modal-backdrop hidden" id="nicknameModal">
-    <div class="modal-card">
-      <h3>Change Account Nickname</h3>
-      <input type="text" id="newNicknameInput" placeholder="Enter new nickname *" />
-      <div class="helper-note">
-        Updating your nickname will instantly update all of your past completions, verifications, and leaderboard points.
-      </div>
-      <div class="modal-actions">
-        <button class="secondary-btn" type="button" onclick="closeNicknameModal()">Cancel</button>
-        <button class="primary-btn" type="button" onclick="saveNewNickname()">Save Nickname</button>
-      </div>
-    </div>
-  </div>
-
-  <footer>
-    DIDDY LIST · CHALLENGE RANKINGS
-  </footer>
-
 </div>
 
 <script>
@@ -1107,7 +1261,8 @@ let pendingLevelSubs = [];
 let pendingRecords = [];
 let signedUpUsers = [];
 let activeModalLevelId = null;
-let activeModalPlayerName = null;
+let selectedLeaderboardPlayer = null;
+let selectedPlayersTabPlayer = null;
 let isSignUpMode = false;
 
 function escapeHTML(value) {
@@ -1296,11 +1451,10 @@ function handleBackdropClose(event, modalId) {
   if (event.target.id === modalId) {
     document.getElementById(modalId).classList.add("hidden");
     if (modalId === "levelRecordsModal") activeModalLevelId = null;
-    if (modalId === "playerProfileModal") activeModalPlayerName = null;
   }
 }
 
-/* PLAYER STATS & PROFILE MODAL */
+/* PLAYER STATS & CCCL DETAIL PANE */
 
 function buildPlayerStatsMap() {
   const levelById = new Map(allLevels.map(l => [String(l.id), l]));
@@ -1370,23 +1524,22 @@ function buildPlayerStatsMap() {
   return map;
 }
 
-function openPlayerProfileModal(playerName) {
+function renderSplitPlayerDetail(paneId, playerName, lbPlacement = null) {
+  const pane = document.getElementById(paneId);
   const map = buildPlayerStatsMap();
   const entry = map.get(String(playerName ?? "").trim().toLowerCase());
-  if (!entry) return;
 
-  activeModalPlayerName = entry.player;
+  if (!entry) {
+    pane.innerHTML = `<div class="empty">No player selected.</div>`;
+    return;
+  }
 
   const hardest = entry.completions[0] || null;
-  document.getElementById("playerProfileName").textContent = entry.player;
-  document.getElementById("playerProfileStats").textContent =
-    `${entry.points} pts · ${entry.completions.length} completion${entry.completions.length === 1 ? "" : "s"}`;
+  const rankPrefix = lbPlacement ? `#${lbPlacement} ` : "";
 
-  const hardestEl = document.getElementById("playerHardestCompletion");
-  if (!hardest) {
-    hardestEl.innerHTML = `<div class="empty">No approved completions yet.</div>`;
-  } else {
-    hardestEl.innerHTML = `
+  const hardestHTML = !hardest
+    ? `<div class="empty">No approved completions yet.</div>`
+    : `
       <div class="hardest-highlight">
         <div class="record-card-header">
           <div>
@@ -1407,38 +1560,42 @@ function openPlayerProfileModal(playerName) {
         ${renderVideoPreview(hardest.videoUrl, hardest.customThumbUrl)}
       </div>
     `;
-  }
 
-  const allEl = document.getElementById("playerAllCompletions");
-  if (!entry.completions.length) {
-    allEl.innerHTML = `<div class="empty">No completions recorded for this player.</div>`;
-  } else {
-    allEl.innerHTML = entry.completions.map((item, idx) => `
-      <div class="record-card">
-        <div class="record-card-header">
-          <div>
-            <strong>#${escapeHTML(item.level.rank)} — ${escapeHTML(item.level.name)}</strong>
-            ${idx === 0 ? `<span class="hardest-badge">HARDEST</span>` : ""}
-            ${item.isVerification ? `<span class="verified-badge">VERIFIED</span>` : ""}
-            <span class="pts-badge">+${item.points} pts</span>
+  const completedRowsHTML = !entry.completions.length
+    ? `<div class="empty">No completions recorded for this player yet.</div>`
+    : `
+      <div class="cccl-completed-list">
+        ${entry.completions.map((item, idx) => `
+          <div class="cccl-completed-row" onclick="openLevelRecordsModal(${item.level.id})">
+            <div class="cccl-comp-rank">#${escapeHTML(item.level.rank)}</div>
+            <div>
+              <div class="cccl-comp-name">
+                ${escapeHTML(item.level.name)}
+                ${idx === 0 ? `<span class="hardest-badge">HARDEST</span>` : ""}
+                ${item.isVerification ? `<span class="verified-badge">VERIFIED</span>` : ""}
+              </div>
+              <div class="helper-note" style="margin-top:2px;">
+                By ${escapeHTML(item.level.creator || "Unknown")} · Click for level records &amp; proof
+              </div>
+            </div>
+            <div class="cccl-comp-pts">+${item.points}</div>
           </div>
-          ${
-            isEditor && item.record
-              ? `<button class="delete-btn" type="button" onclick="deleteRecord(${item.record.id})">Delete Record</button>`
-              : ""
-          }
-        </div>
-        ${renderVideoPreview(item.videoUrl, item.customThumbUrl)}
+        `).join("")}
       </div>
-    `).join("");
-  }
+    `;
 
-  document.getElementById("playerProfileModal").classList.remove("hidden");
-}
+  pane.innerHTML = `
+    <div class="cccl-player-header">
+      <h2 class="cccl-player-title">${rankPrefix}${escapeHTML(entry.player)}</h2>
+      <div class="cccl-player-points">${entry.points} pts</div>
+    </div>
 
-function closePlayerProfileModal() {
-  activeModalPlayerName = null;
-  document.getElementById("playerProfileModal").classList.add("hidden");
+    <h3 class="cccl-section-heading" style="margin-top:0;">Hardest</h3>
+    ${hardestHTML}
+
+    <h3 class="cccl-section-heading">Completed (${entry.completions.length})</h3>
+    ${completedRowsHTML}
+  `;
 }
 
 /* LEVEL RECORDS MODAL */
@@ -1509,9 +1666,6 @@ async function deleteRecord(recordId) {
   await loadData();
   if (activeModalLevelId !== null) {
     openLevelRecordsModal(activeModalLevelId);
-  }
-  if (activeModalPlayerName !== null) {
-    openPlayerProfileModal(activeModalPlayerName);
   }
 }
 
@@ -1786,7 +1940,7 @@ function renderLevels(levels) {
             thumbUrl
               ? `<img class="thumbnail" src="${escapeHTML(thumbUrl)}" alt="${escapeHTML(lvl.name)} thumbnail" loading="lazy" onerror="${onErrorHandler}">`
               : isMedal
-                ? `<div class="thumbnail-placeholder" style="display:grid;place-items:center;color:#c1b0e5;font-size:10px;font-weight:700;letter-spacing:.6px;">MEDAL</div>`
+                ? `<div class="thumbnail-placeholder" style="display:grid;place-items:center;color:#c1b0e5;font-size:11px;font-weight:700;letter-spacing:.6px;">MEDAL</div>`
                 : `<div class="thumbnail-placeholder"></div>`
           }
         </div>
@@ -1821,66 +1975,77 @@ function renderLevels(levels) {
 
 function renderLeaderboard() {
   const container = document.getElementById("leaderboardList");
+  const detailPane = document.getElementById("leaderboardDetailPane");
+  const query = (document.getElementById("leaderboardSearchInput")?.value || "").trim().toLowerCase();
   const statsMap = buildPlayerStatsMap();
-  const sorted = Array.from(statsMap.values())
-    .filter(p => p.points > 0 || p.completions.length > 0)
-    .sort((a, b) => b.points - a.points || b.completions.length - a.completions.length);
 
-  if (sorted.length === 0) {
-    container.innerHTML = `<div class="empty">No points on the leaderboard yet.</div>`;
+  const rankedAll = Array.from(statsMap.values())
+    .filter(p => p.points > 0 || p.completions.length > 0)
+    .sort((a, b) => b.points - a.points || b.completions.length - a.completions.length)
+    .map((row, idx) => ({ ...row, lbRank: idx + 1 }));
+
+  const filtered = rankedAll.filter(row => !query || row.player.toLowerCase().includes(query));
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="empty">No players on the leaderboard yet.</div>`;
+    detailPane.innerHTML = `<div class="empty">No matching player to display.</div>`;
     return;
   }
 
-  container.innerHTML = sorted.map((row, idx) => {
-    const count = row.completions.length;
-    const hardestText = row.completions[0]
-      ? ` · Hardest: #${row.completions[0].level.rank} ${row.completions[0].level.name}`
-      : "";
+  const currentSelection = filtered.find(r => r.player.toLowerCase() === String(selectedLeaderboardPlayer || "").toLowerCase()) || filtered[0];
+  selectedLeaderboardPlayer = currentSelection.player;
+
+  container.innerHTML = filtered.map(row => {
+    const isActive = row.player.toLowerCase() === currentSelection.player.toLowerCase();
     return `
-      <div class="lb-row" data-open-player="${escapeHTML(row.player)}">
-        <div>
-          <strong>#${idx + 1} ${escapeHTML(row.player)}</strong>
-          <span style="color:#999ca7;font-size:11px;margin-left:8px;">
-            (${count} completion${count === 1 ? "" : "s"}${escapeHTML(hardestText)})
-          </span>
+      <div class="sidebar-player-item ${isActive ? "active" : ""}" data-select-lb="${escapeHTML(row.player)}" data-lb-rank="${row.lbRank}">
+        <div class="sidebar-player-left">
+          <span class="sidebar-rank">#${row.lbRank}</span>
+          <span class="sidebar-pts-subtle">${row.points}</span>
+          <span class="sidebar-name">${escapeHTML(row.player)}</span>
         </div>
-        <div class="lb-points">${row.points} pts</div>
       </div>
     `;
   }).join("");
+
+  renderSplitPlayerDetail("leaderboardDetailPane", currentSelection.player, currentSelection.lbRank);
 }
 
 function renderPlayersDirectory() {
   const container = document.getElementById("playersList");
+  const detailPane = document.getElementById("playersDetailPane");
   const query = (document.getElementById("playerSearchInput")?.value || "").trim().toLowerCase();
   const statsMap = buildPlayerStatsMap();
 
-  const list = Array.from(statsMap.values())
-    .filter(p => !query || p.player.toLowerCase().includes(query))
-    .sort((a, b) => b.points - a.points || a.player.localeCompare(b.player));
+  const rankedAll = Array.from(statsMap.values())
+    .sort((a, b) => b.points - a.points || a.player.localeCompare(b.player))
+    .map((row, idx) => ({ ...row, lbRank: idx + 1 }));
 
-  if (list.length === 0) {
+  const filtered = rankedAll.filter(p => !query || p.player.toLowerCase().includes(query));
+
+  if (filtered.length === 0) {
     container.innerHTML = `<div class="empty">No matching players found.</div>`;
+    detailPane.innerHTML = `<div class="empty">No matching player to display.</div>`;
     return;
   }
 
-  container.innerHTML = list.map(row => {
-    const count = row.completions.length;
-    const hardest = row.completions[0]
-      ? `Hardest: #${row.completions[0].level.rank} ${row.completions[0].level.name}`
-      : "No completions yet";
+  const currentSelection = filtered.find(r => r.player.toLowerCase() === String(selectedPlayersTabPlayer || "").toLowerCase()) || filtered[0];
+  selectedPlayersTabPlayer = currentSelection.player;
+
+  container.innerHTML = filtered.map(row => {
+    const isActive = row.player.toLowerCase() === currentSelection.player.toLowerCase();
     return `
-      <div class="lb-row" data-open-player="${escapeHTML(row.player)}">
-        <div>
-          <strong>${escapeHTML(row.player)}</strong>
-          <span style="color:#999ca7;font-size:11px;margin-left:8px;">
-            ${count} completion${count === 1 ? "" : "s"} · ${escapeHTML(hardest)}
-          </span>
+      <div class="sidebar-player-item ${isActive ? "active" : ""}" data-select-player="${escapeHTML(row.player)}" data-lb-rank="${row.points > 0 ? row.lbRank : ""}">
+        <div class="sidebar-player-left">
+          <span class="sidebar-rank">${row.points > 0 ? `#${row.lbRank}` : "—"}</span>
+          <span class="sidebar-pts-subtle">${row.points} pts</span>
+          <span class="sidebar-name">${escapeHTML(row.player)}</span>
         </div>
-        <div class="lb-points">${row.points} pts</div>
       </div>
     `;
   }).join("");
+
+  renderSplitPlayerDetail("playersDetailPane", currentSelection.player, currentSelection.points > 0 ? currentSelection.lbRank : null);
 }
 
 /* PUBLIC SUBMISSIONS */
@@ -2165,13 +2330,17 @@ document.getElementById("list").addEventListener("click", event => {
 });
 
 document.getElementById("leaderboardList").addEventListener("click", event => {
-  const row = event.target.closest("[data-open-player]");
-  if (row) openPlayerProfileModal(row.dataset.openPlayer);
+  const item = event.target.closest("[data-select-lb]");
+  if (!item) return;
+  selectedLeaderboardPlayer = item.dataset.selectLb;
+  renderLeaderboard();
 });
 
 document.getElementById("playersList").addEventListener("click", event => {
-  const row = event.target.closest("[data-open-player]");
-  if (row) openPlayerProfileModal(row.dataset.openPlayer);
+  const item = event.target.closest("[data-select-player]");
+  if (!item) return;
+  selectedPlayersTabPlayer = item.dataset.selectPlayer;
+  renderPlayersDirectory();
 });
 
 function openEditModal(id) {
