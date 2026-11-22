@@ -1711,7 +1711,7 @@ async function loadData() {
     return;
   }
 
-  allLevels = levels || [];
+  allLevels = (levels || []).sort((a, b) => Number(a.rank) - Number(b.rank));
   approvedRecords = recErr
     ? []
     : (recs || []).filter(r => String(r.status ?? "approved").trim().toLowerCase() === "approved");
@@ -2032,8 +2032,10 @@ async function shiftRanksDownFrom(targetRank, excludeId = null) {
     .sort((a, b) => Number(b.rank) - Number(a.rank));
 
   for (const lvl of levelsToPushDown) {
-    const { error } = await sb.from("Levels").update({ rank: Number(lvl.rank) + 1 }).eq("id", lvl.id);
+    const nextRank = Number(lvl.rank) + 1;
+    const { error } = await sb.from("Levels").update({ rank: nextRank }).eq("id", lvl.id);
     if (error) return error;
+    lvl.rank = nextRank;
   }
   return null;
 }
@@ -2064,26 +2066,26 @@ async function approveLevelSubmission(subId) {
   if (insErr) return alert("Could not insert level: " + insErr.message);
 
   await sb.from("LevelSubmissions").update({ status: "approved", verifier: chosenVerifier }).eq("id", subId);
-  loadData();
+  await loadData();
 }
 
 async function rejectLevelSubmission(subId) {
   if (!isEditor) return alert("Access denied: Editor status required.");
   await sb.from("LevelSubmissions").update({ status: "rejected" }).eq("id", subId);
-  loadEditorQueues();
+  await loadEditorQueues();
 }
 
 async function approveRecord(recId) {
   if (!isEditor) return alert("Access denied: Editor status required.");
   const { error } = await sb.from("Records").update({ status: "approved" }).eq("id", recId);
   if (error) return alert("Could not approve record: " + error.message);
-  loadData();
+  await loadData();
 }
 
 async function rejectRecord(recId) {
   if (!isEditor) return alert("Access denied: Editor status required.");
   await sb.from("Records").update({ status: "rejected" }).eq("id", recId);
-  loadEditorQueues();
+  await loadEditorQueues();
 }
 
 /* ROW ACTIONS, EDIT & DELETE */
@@ -2150,21 +2152,25 @@ async function saveEditedLevel() {
   if (oldRank !== null && oldRank !== newRank) {
     if (newRank < oldRank) {
       const toShiftDown = allLevels
-        .filter(item => String(item.id) !== String(id) && item.rank >= newRank && item.rank < oldRank)
-        .sort((a, b) => b.rank - a.rank);
+        .filter(item => String(item.id) !== String(id) && Number(item.rank) >= newRank && Number(item.rank) < oldRank)
+        .sort((a, b) => Number(b.rank) - Number(a.rank));
 
       for (const item of toShiftDown) {
-        const { error: shiftErr } = await sb.from("Levels").update({ rank: item.rank + 1 }).eq("id", item.id);
+        const nextRank = Number(item.rank) + 1;
+        const { error: shiftErr } = await sb.from("Levels").update({ rank: nextRank }).eq("id", item.id);
         if (shiftErr) return alert("Could not update rank order: " + shiftErr.message);
+        item.rank = nextRank;
       }
     } else {
       const toShiftUp = allLevels
-        .filter(item => String(item.id) !== String(id) && item.rank > oldRank && item.rank <= newRank)
-        .sort((a, b) => a.rank - b.rank);
+        .filter(item => String(item.id) !== String(id) && Number(item.rank) > oldRank && Number(item.rank) <= newRank)
+        .sort((a, b) => Number(a.rank) - Number(b.rank));
 
       for (const item of toShiftUp) {
-        const { error: shiftErr } = await sb.from("Levels").update({ rank: item.rank - 1 }).eq("id", item.id);
+        const nextRank = Number(item.rank) - 1;
+        const { error: shiftErr } = await sb.from("Levels").update({ rank: nextRank }).eq("id", item.id);
         if (shiftErr) return alert("Could not update rank order: " + shiftErr.message);
+        item.rank = nextRank;
       }
     }
   }
@@ -2184,7 +2190,7 @@ async function saveEditedLevel() {
     alert("Could not save edits: " + error.message);
   } else {
     closeEditModal();
-    loadData();
+    await loadData();
   }
 }
 
@@ -2194,7 +2200,7 @@ async function deleteLevel(id) {
 
   const { error } = await sb.from("Levels").delete().eq("id", id);
   if (error) alert("Delete failed: " + error.message);
-  else loadData();
+  else await loadData();
 }
 
 async function addLevel() {
@@ -2227,7 +2233,7 @@ async function addLevel() {
     ["rank", "name", "creator", "verifier", "level_id", "video_url", "custom_thumb_url"].forEach(id => {
       document.getElementById(id).value = "";
     });
-    loadData();
+    await loadData();
   }
 }
 
