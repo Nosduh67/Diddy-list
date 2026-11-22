@@ -448,6 +448,11 @@ button {
   font-size: 12px;
 }
 
+.user-status-actions {
+  display: flex;
+  gap: 8px;
+}
+
 .hidden {
   display: none !important;
 }
@@ -584,7 +589,7 @@ button {
   color: #c9b5ec;
 }
 
-/* EDIT MODAL */
+/* MODALS */
 
 .modal-backdrop {
   position: fixed;
@@ -748,14 +753,20 @@ footer {
       Logged in as <strong id="loggedUserNickname"></strong>
       <span style="color:#999ca7;margin-left:6px;">(<span id="loggedUserEmail"></span> · Member Account)</span>
     </div>
-    <button class="secondary-btn" onclick="logout()">Log Out</button>
+    <div class="user-status-actions">
+      <button class="secondary-btn" onclick="openNicknameModal()">Change Nickname</button>
+      <button class="secondary-btn" onclick="logout()">Log Out</button>
+    </div>
   </div>
 
   <!-- EDITOR CONTROLS & APPROVAL QUEUES -->
   <div class="editor-panel hidden" id="editorPanel">
     <div class="editor-header">
       <h3>Editor Panel <span class="editor-email" id="editorEmail"></span></h3>
-      <button class="secondary-btn" onclick="logout()">Log Out</button>
+      <div class="user-status-actions">
+        <button class="secondary-btn" onclick="openNicknameModal()">Change Nickname</button>
+        <button class="secondary-btn" onclick="logout()">Log Out</button>
+      </div>
     </div>
 
     <div class="editor-section">
@@ -781,6 +792,7 @@ footer {
         <input type="text" id="verifier" placeholder="Verifier" />
         <input type="text" id="level_id" placeholder="Level ID" />
         <input type="text" id="video_url" placeholder="Video Proof URL" />
+        <input type="text" id="custom_thumb_url" placeholder="Custom Thumbnail URL (Optional)" style="grid-column: span 2;" />
       </div>
       <button class="primary-btn" onclick="addLevel()">Add Level</button>
       <div class="helper-note">
@@ -800,6 +812,7 @@ footer {
         <input type="text" id="subVerifier" placeholder="Verifier" />
         <input type="text" id="subLevelId" placeholder="Level ID" />
         <input type="text" id="subVideoUrl" placeholder="Verification Video URL" />
+        <input type="text" id="subCustomThumb" placeholder="Custom Thumbnail URL (Optional)" style="grid-column: span 2;" />
       </div>
       <input type="text" id="subAuthor" placeholder="Your Name / Handle (optional)" />
       <button class="primary-btn" type="button" onclick="submitLevelProposal()">Submit Level for Approval</button>
@@ -866,10 +879,26 @@ footer {
         <input type="text" id="editVerifier" placeholder="Verifier" />
         <input type="text" id="editLevelId" placeholder="Level ID" />
         <input type="text" id="editVideoUrl" placeholder="Video Proof URL" />
+        <input type="text" id="editCustomThumb" placeholder="Custom Thumbnail URL (Optional)" style="grid-column: span 2;" />
       </div>
       <div class="modal-actions">
         <button class="secondary-btn" type="button" onclick="closeEditModal()">Cancel</button>
         <button class="primary-btn" type="button" onclick="saveEditedLevel()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHANGE NICKNAME MODAL -->
+  <div class="modal-backdrop hidden" id="nicknameModal">
+    <div class="modal-card">
+      <h3>Change Account Nickname</h3>
+      <input type="text" id="newNicknameInput" placeholder="Enter new nickname *" />
+      <div class="helper-note">
+        Updating your nickname will instantly update all of your past completions and leaderboard points.
+      </div>
+      <div class="modal-actions">
+        <button class="secondary-btn" type="button" onclick="closeNicknameModal()">Cancel</button>
+        <button class="primary-btn" type="button" onclick="saveNewNickname()">Save Nickname</button>
       </div>
     </div>
   </div>
@@ -911,8 +940,14 @@ function getPointsForRank(rank) {
   return Math.max(10, Math.round(100 * Math.pow(0.86, r - 1)));
 }
 
-function getVideoDetails(url) {
+function getVideoDetails(url, customThumbUrl = null) {
+  const safeCustom = safeURL(customThumbUrl);
+  if (safeCustom) {
+    return { type: "custom", thumbUrl: safeCustom, embedUrl: null };
+  }
+
   if (!url) return { type: null, thumbUrl: null, embedUrl: null };
+
   try {
     const parsed = new URL(url);
     const host = parsed.hostname.replace(/^www\./, "");
@@ -954,16 +989,17 @@ function getVideoDetails(url) {
   } catch {
     return { type: null, thumbUrl: null, embedUrl: null };
   }
+
   return { type: null, thumbUrl: null, embedUrl: null };
 }
 
-function renderVideoPreview(videoUrl) {
+function renderVideoPreview(videoUrl, customThumbUrl = null) {
   const safeProof = safeURL(videoUrl);
   if (!safeProof) {
     return `<div class="helper-note">No video link provided.</div>`;
   }
 
-  const { embedUrl } = getVideoDetails(safeProof);
+  const { embedUrl } = getVideoDetails(safeProof, customThumbUrl);
   return `
     ${
       embedUrl
@@ -1113,6 +1149,52 @@ async function loadUserNickname() {
   syncRecordNicknameInput();
 }
 
+function openNicknameModal() {
+  if (!currentUser) return;
+  document.getElementById("newNicknameInput").value = currentNickname;
+  document.getElementById("nicknameModal").classList.remove("hidden");
+}
+
+function closeNicknameModal() {
+  document.getElementById("nicknameModal").classList.add("hidden");
+}
+
+async function saveNewNickname() {
+  if (!currentUser) return;
+  const newNickname = document.getElementById("newNicknameInput").value.trim();
+
+  if (!newNickname) {
+    return alert("Please enter a valid nickname.");
+  }
+
+  const oldNickname = currentNickname;
+
+  // 1. Update Profiles table
+  const { error: profErr } = await sb
+    .from("Profiles")
+    .upsert([{ id: currentUser.id, nickname: newNickname }], { onConflict: "id" });
+
+  if (profErr) {
+    return alert("Could not update profile: " + profErr.message);
+  }
+
+  // 2. Update user metadata
+  await sb.auth.updateUser({ data: { nickname: newNickname } });
+
+  // 3. Cascade update across Records and Submissions
+  if (oldNickname && oldNickname !== newNickname) {
+    await Promise.all([
+      sb.from("Records").update({ player_name: newNickname }).eq("player_name", oldNickname),
+      sb.from("LevelSubmissions").update({ submitter_name: newNickname }).eq("submitter_name", oldNickname)
+    ]);
+  }
+
+  currentNickname = newNickname;
+  closeNicknameModal();
+  updateAuthUI();
+  alert("Nickname updated successfully!");
+}
+
 async function updateAuthUI() {
   const loginPanel = document.getElementById("loginPanel");
   const editorPanel = document.getElementById("editorPanel");
@@ -1211,7 +1293,7 @@ function renderLevels(levels) {
   }
 
   container.innerHTML = levels.map(lvl => {
-    const { type, thumbUrl } = getVideoDetails(lvl.video_url);
+    const { type, thumbUrl } = getVideoDetails(lvl.video_url, lvl.custom_thumb_url);
     const proofURL = safeURL(lvl.video_url);
     const pts = getPointsForRank(lvl.rank);
 
@@ -1299,6 +1381,7 @@ async function submitLevelProposal() {
   const verifier = document.getElementById("subVerifier").value.trim();
   const levelId = document.getElementById("subLevelId").value.trim();
   const videoUrl = document.getElementById("subVideoUrl").value.trim();
+  const customThumbUrl = document.getElementById("subCustomThumb").value.trim();
   const submitterName = document.getElementById("subAuthor").value.trim() || currentNickname;
 
   if (!name) return alert("Please enter a level name.");
@@ -1310,6 +1393,7 @@ async function submitLevelProposal() {
     verifier,
     level_id: levelId,
     video_url: videoUrl,
+    custom_thumb_url: customThumbUrl,
     submitter_name: submitterName,
     status: "pending"
   }]);
@@ -1317,7 +1401,7 @@ async function submitLevelProposal() {
   if (error) {
     alert("Could not submit level: " + error.message);
   } else {
-    ["subName", "subRank", "subCreator", "subVerifier", "subLevelId", "subVideoUrl", "subAuthor"].forEach(id => {
+    ["subName", "subRank", "subCreator", "subVerifier", "subLevelId", "subVideoUrl", "subCustomThumb", "subAuthor"].forEach(id => {
       document.getElementById(id).value = "";
     });
     alert("Level submitted! Waiting for editor approval.");
@@ -1392,7 +1476,7 @@ function renderEditorQueues() {
             <button class="delete-btn" type="button" onclick="rejectLevelSubmission(${sub.id})">Reject</button>
           </div>
         </div>
-        ${renderVideoPreview(sub.video_url)}
+        ${renderVideoPreview(sub.video_url, sub.custom_thumb_url)}
       </div>
     `).join("");
   }
@@ -1450,7 +1534,8 @@ async function approveLevelSubmission(subId) {
     creator: sub.creator || "",
     verifier: sub.verifier || "",
     level_id: sub.level_id || "",
-    video_url: sub.video_url || ""
+    video_url: sub.video_url || "",
+    custom_thumb_url: sub.custom_thumb_url || ""
   }]);
   if (insErr) return alert("Could not insert level: " + insErr.message);
 
@@ -1499,6 +1584,7 @@ function openEditModal(id) {
   document.getElementById("editVerifier").value = level.verifier ?? "";
   document.getElementById("editLevelId").value = level.level_id ?? "";
   document.getElementById("editVideoUrl").value = level.video_url ?? "";
+  document.getElementById("editCustomThumb").value = level.custom_thumb_url ?? "";
   document.getElementById("editModal").classList.remove("hidden");
 }
 
@@ -1549,7 +1635,8 @@ async function saveEditedLevel() {
     creator: document.getElementById("editCreator").value.trim(),
     verifier: document.getElementById("editVerifier").value.trim(),
     level_id: document.getElementById("editLevelId").value.trim(),
-    video_url: document.getElementById("editVideoUrl").value.trim()
+    video_url: document.getElementById("editVideoUrl").value.trim(),
+    custom_thumb_url: document.getElementById("editCustomThumb").value.trim()
   };
 
   const { error } = await sb.from("Levels").update(updatedPayload).eq("id", id);
@@ -1589,14 +1676,15 @@ async function addLevel() {
     creator: document.getElementById("creator").value.trim(),
     verifier: document.getElementById("verifier").value.trim(),
     level_id: document.getElementById("level_id").value.trim(),
-    video_url: document.getElementById("video_url").value.trim()
+    video_url: document.getElementById("video_url").value.trim(),
+    custom_thumb_url: document.getElementById("custom_thumb_url").value.trim()
   };
 
   const { error } = await sb.from("Levels").insert([payload]);
   if (error) {
     alert("Could not add level: " + error.message);
   } else {
-    ["rank", "name", "creator", "verifier", "level_id", "video_url"].forEach(id => {
+    ["rank", "name", "creator", "verifier", "level_id", "video_url", "custom_thumb_url"].forEach(id => {
       document.getElementById(id).value = "";
     });
     loadData();
