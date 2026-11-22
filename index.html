@@ -871,7 +871,7 @@ footer {
       <input type="text" id="recVideoUrl" placeholder="Completion Proof URL (YouTube / Medal) *" />
       <button class="primary-btn" type="button" onclick="submitRecord()">Submit Record for Approval</button>
       <div class="helper-note">
-        Points are awarded once an editor approves your record (#1 = 100 pts, #2 = 85 pts, #3 = 72 pts, etc.).
+        Points are awarded once an editor approves your record (#1 = 100 pts, #2 = 85 pts, #3 = 72 pts, etc.). Verifiers also receive full level points.
       </div>
     </div>
   </div>
@@ -958,7 +958,7 @@ footer {
       <h3>Change Account Nickname</h3>
       <input type="text" id="newNicknameInput" placeholder="Enter new nickname *" />
       <div class="helper-note">
-        Updating your nickname will instantly update all of your past completions and leaderboard points.
+        Updating your nickname will instantly update all of your past completions, verifications, and leaderboard points.
       </div>
       <div class="modal-actions">
         <button class="secondary-btn" type="button" onclick="closeNicknameModal()">Cancel</button>
@@ -1323,10 +1323,14 @@ async function saveNewNickname() {
   await sb.auth.updateUser({ data: { nickname: newNickname } });
 
   if (oldNickname && oldNickname !== newNickname) {
-    await Promise.all([
+    const updates = [
       sb.from("Records").update({ player_name: newNickname }).eq("player_name", oldNickname),
       sb.from("LevelSubmissions").update({ submitter_name: newNickname }).eq("submitter_name", oldNickname)
-    ]);
+    ];
+    if (isEditor) {
+      updates.push(sb.from("Levels").update({ verifier: newNickname }).eq("verifier", oldNickname));
+    }
+    await Promise.all(updates);
   }
 
   currentNickname = newNickname;
@@ -1491,21 +1495,33 @@ function renderLeaderboard() {
   const levelById = new Map(allLevels.map(l => [String(l.id), l]));
   const totals = new Map();
 
+  function addPlayerPoints(name, pts, isRecord = false) {
+    const clean = String(name ?? "").trim();
+    if (!clean || clean.toLowerCase() === "unknown") return;
+    const entry = totals.get(clean) || { player: clean, points: 0, count: 0 };
+    entry.points += pts;
+    if (isRecord) entry.count += 1;
+    totals.set(clean, entry);
+  }
+
+  // Verifiers automatically get the points for the levels they verified
+  for (const lvl of allLevels) {
+    if (lvl.verifier) {
+      addPlayerPoints(lvl.verifier, getPointsForRank(lvl.rank), false);
+    }
+  }
+
+  // Approved completion records award points to players
   for (const rec of approvedRecords) {
     const lvl = levelById.get(String(rec.level_id_ref));
     if (!lvl) continue;
-    const player = (rec.player_name || "Unknown").trim();
-    const pts = getPointsForRank(lvl.rank);
-    const entry = totals.get(player) || { player, points: 0, count: 0 };
-    entry.points += pts;
-    entry.count += 1;
-    totals.set(player, entry);
+    addPlayerPoints(rec.player_name, getPointsForRank(lvl.rank), true);
   }
 
   const sorted = Array.from(totals.values()).sort((a, b) => b.points - a.points || b.count - a.count);
 
   if (sorted.length === 0) {
-    container.innerHTML = `<div class="empty">No approved records yet.</div>`;
+    container.innerHTML = `<div class="empty">No points on the leaderboard yet.</div>`;
     return;
   }
 
