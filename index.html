@@ -537,14 +537,23 @@ button {
 .queue-actions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 6px;
   flex-shrink: 0;
 }
 
 .approve-rank-input {
-  width: 68px;
+  width: 66px;
   margin: 0;
   padding: 4px 7px;
+  font-size: 11px;
+  height: 26px;
+}
+
+.approve-verifier-input {
+  width: 155px;
+  margin: 0;
+  padding: 4px 8px;
   font-size: 11px;
   height: 26px;
 }
@@ -776,6 +785,8 @@ footer {
   </div>
 </header>
 
+<datalist id="signedUpUsersList"></datalist>
+
 <div class="container">
 
   <div class="page-heading">
@@ -842,7 +853,7 @@ footer {
         <input type="number" id="rank" min="1" placeholder="Rank (e.g. 1)" />
         <input type="text" id="name" placeholder="Level Name" />
         <input type="text" id="creator" placeholder="Creator" />
-        <input type="text" id="verifier" placeholder="Verifier" />
+        <input type="text" id="verifier" list="signedUpUsersList" placeholder="Search or type Verifier (gets level pts)" />
         <input type="text" id="level_id" placeholder="Level ID" />
         <input type="text" id="video_url" placeholder="Video Proof URL" />
         <input type="text" id="custom_thumb_url" placeholder="Custom Thumbnail URL (Optional)" style="grid-column: span 2;" />
@@ -949,10 +960,13 @@ footer {
         <input type="number" id="editRank" min="1" placeholder="Rank" />
         <input type="text" id="editName" placeholder="Level Name" />
         <input type="text" id="editCreator" placeholder="Creator" />
-        <input type="text" id="editVerifier" placeholder="Verifier" />
+        <input type="text" id="editVerifier" list="signedUpUsersList" placeholder="Search or select Verifier" />
         <input type="text" id="editLevelId" placeholder="Level ID" />
         <input type="text" id="editVideoUrl" placeholder="Video Proof URL" />
         <input type="text" id="editCustomThumb" placeholder="Custom Thumbnail URL (Optional)" style="grid-column: span 2;" />
+      </div>
+      <div class="helper-note">
+        Changing the Verifier automatically transfers the level's verifier points to that user.
       </div>
       <div class="modal-actions">
         <button class="secondary-btn" type="button" onclick="closeEditModal()">Cancel</button>
@@ -995,6 +1009,7 @@ let allLevels = [];
 let approvedRecords = [];
 let pendingLevelSubs = [];
 let pendingRecords = [];
+let signedUpUsers = [];
 let activeModalLevelId = null;
 let isSignUpMode = false;
 
@@ -1022,6 +1037,32 @@ function safeURL(value) {
     return "";
   }
   return "";
+}
+
+function refreshSignedUpUsersList() {
+  const names = new Set();
+  for (const p of signedUpUsers) {
+    const n = String(p?.nickname ?? "").trim();
+    if (n) names.add(n);
+  }
+  for (const l of allLevels) {
+    const v = String(l?.verifier ?? "").trim();
+    if (v && v.toLowerCase() !== "unknown") names.add(v);
+  }
+  for (const r of approvedRecords) {
+    const pl = String(r?.player_name ?? "").trim();
+    if (pl && pl.toLowerCase() !== "unknown") names.add(pl);
+  }
+  for (const s of pendingLevelSubs) {
+    const sv = String(s?.verifier ?? "").trim();
+    const sa = String(s?.submitter_name ?? "").trim();
+    if (sv && sv.toLowerCase() !== "unknown") names.add(sv);
+    if (sa && sa.toLowerCase() !== "unknown") names.add(sa);
+  }
+
+  const sorted = Array.from(names).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+  const dl = document.getElementById("signedUpUsersList");
+  dl.innerHTML = sorted.map(name => `<option value="${escapeHTML(name)}"></option>`).join("");
 }
 
 function getVideoDetails(url, customThumbUrl = null) {
@@ -1396,9 +1437,10 @@ async function logout() {
 }
 
 async function loadData() {
-  const [{ data: levels, error: lvlErr }, { data: recs, error: recErr }] = await Promise.all([
+  const [{ data: levels, error: lvlErr }, { data: recs, error: recErr }, { data: profiles }] = await Promise.all([
     sb.from("Levels").select("*").order("rank", { ascending: true }),
-    sb.from("Records").select("*").eq("status", "approved").order("id", { ascending: true })
+    sb.from("Records").select("*").eq("status", "approved").order("id", { ascending: true }),
+    sb.from("Profiles").select("nickname")
   ]);
 
   if (lvlErr) {
@@ -1408,7 +1450,9 @@ async function loadData() {
 
   allLevels = levels || [];
   approvedRecords = recErr ? [] : (recs || []);
+  signedUpUsers = profiles || [];
 
+  refreshSignedUpUsersList();
   populateRecordLevelSelect();
   filterLevels();
   renderLeaderboard();
@@ -1622,6 +1666,7 @@ async function loadEditorQueues() {
 
   pendingLevelSubs = subs || [];
   pendingRecords = recs || [];
+  refreshSignedUpUsersList();
   renderEditorQueues();
 }
 
@@ -1650,6 +1695,15 @@ function renderEditorQueues() {
               id="approveRank-${escapeHTML(sub.id)}"
               value="${escapeHTML(sub.suggested_rank || 1)}"
               title="Set placement rank"
+            />
+            <input
+              type="text"
+              list="signedUpUsersList"
+              class="approve-verifier-input"
+              id="approveVerifier-${escapeHTML(sub.id)}"
+              value="${escapeHTML(sub.verifier || "")}"
+              placeholder="Search verifier (gets pts)"
+              title="Search signed-up users to assign verifier points"
             />
             <button class="approve-btn" type="button" onclick="approveLevelSubmission(${sub.id})">Approve</button>
             <button class="delete-btn" type="button" onclick="rejectLevelSubmission(${sub.id})">Reject</button>
@@ -1704,8 +1758,10 @@ async function approveLevelSubmission(subId) {
   if (!sub) return;
 
   const rankInput = document.getElementById(`approveRank-${subId}`);
+  const verifierInput = document.getElementById(`approveVerifier-${subId}`);
   const chosenRank = parseInt(rankInput?.value, 10);
   const targetRank = Math.max(1, chosenRank || parseInt(sub.suggested_rank, 10) || (allLevels.length + 1));
+  const chosenVerifier = (verifierInput?.value ?? sub.verifier ?? "").trim();
 
   const shiftErr = await shiftRanksDownFrom(targetRank);
   if (shiftErr) return alert("Could not shift ranks: " + shiftErr.message);
@@ -1714,14 +1770,14 @@ async function approveLevelSubmission(subId) {
     rank: targetRank,
     name: sub.name,
     creator: sub.creator || "",
-    verifier: sub.verifier || "",
+    verifier: chosenVerifier,
     level_id: sub.level_id || "",
     video_url: sub.video_url || "",
     custom_thumb_url: sub.custom_thumb_url || ""
   }]);
   if (insErr) return alert("Could not insert level: " + insErr.message);
 
-  await sb.from("LevelSubmissions").update({ status: "approved" }).eq("id", subId);
+  await sb.from("LevelSubmissions").update({ status: "approved", verifier: chosenVerifier }).eq("id", subId);
   loadData();
 }
 
@@ -1764,6 +1820,7 @@ function openEditModal(id) {
   const level = allLevels.find(item => String(item.id) === String(id));
   if (!level) return;
 
+  refreshSignedUpUsersList();
   document.getElementById("editRowId").value = level.id;
   document.getElementById("editRank").value = level.rank ?? "";
   document.getElementById("editName").value = level.name ?? "";
