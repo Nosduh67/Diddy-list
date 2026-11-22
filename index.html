@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -165,7 +164,7 @@ header {
 
 .column-headings {
   display: grid;
-  grid-template-columns: 55px 116px minmax(0, 1fr) 105px;
+  grid-template-columns: 55px 116px minmax(0, 1fr) 150px;
   align-items: center;
   gap: 13px;
   padding: 10px 13px;
@@ -189,7 +188,7 @@ header {
 
 .level-row {
   display: grid;
-  grid-template-columns: 55px 116px minmax(0, 1fr) 105px;
+  grid-template-columns: 55px 116px minmax(0, 1fr) 150px;
   align-items: center;
   gap: 13px;
   min-height: 84px;
@@ -286,7 +285,8 @@ header {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .proof-link {
@@ -301,6 +301,20 @@ header {
 .proof-link:hover {
   color: #d5c4ff;
   text-decoration: underline;
+}
+
+.edit-btn {
+  padding: 5px 8px;
+  color: #d4c4f7;
+  background: #292333;
+  border: 1px solid #52426d;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 10px;
+}
+
+.edit-btn:hover {
+  background: #3b304d;
 }
 
 .delete-btn {
@@ -505,6 +519,46 @@ button {
   margin-top: 12px;
 }
 
+.helper-note {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+/* EDIT MODAL */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 100;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 480px;
+  background: #191b21;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 18px;
+}
+
+.modal-card h3 {
+  margin: 0 0 12px;
+  font-size: 16px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
 /* FOOTER */
 
 footer {
@@ -586,7 +640,7 @@ footer {
   .level-actions {
     grid-column: 3;
     justify-content: flex-start;
-    margin-top: -3px;
+    margin-top: 4px;
   }
 
   .level-row {
@@ -695,7 +749,7 @@ footer {
       <h4>Level Details</h4>
 
       <div class="form-grid">
-        <input type="number" id="rank" placeholder="Rank (e.g. 1)" />
+        <input type="number" id="rank" min="1" placeholder="Rank (e.g. 1)" />
         <input type="text" id="name" placeholder="Level Name" />
         <input type="text" id="creator" placeholder="Creator" />
         <input type="text" id="verifier" placeholder="Verifier" />
@@ -706,8 +760,38 @@ footer {
       <button class="primary-btn add-btn" onclick="addLevel()">
         Add Level
       </button>
+      <div class="helper-note">
+        Adding a level at an existing rank automatically pushes levels at or below that rank down by 1.
+      </div>
     </div>
 
+  </div>
+
+  <!-- EDIT LEVEL MODAL -->
+
+  <div class="modal-backdrop hidden" id="editModal">
+    <div class="modal-card">
+      <h3>Edit Published Level</h3>
+      <input type="hidden" id="editRowId" />
+
+      <div class="form-grid">
+        <input type="number" id="editRank" min="1" placeholder="Rank" />
+        <input type="text" id="editName" placeholder="Level Name" />
+        <input type="text" id="editCreator" placeholder="Creator" />
+        <input type="text" id="editVerifier" placeholder="Verifier" />
+        <input type="text" id="editLevelId" placeholder="Level ID" />
+        <input type="text" id="editVideoUrl" placeholder="Video Proof URL" />
+      </div>
+
+      <div class="modal-actions">
+        <button class="secondary-btn" type="button" onclick="closeEditModal()">
+          Cancel
+        </button>
+        <button class="primary-btn" type="button" onclick="saveEditedLevel()">
+          Save Changes
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- PUBLIC LIST -->
@@ -728,7 +812,7 @@ footer {
     <div>Rank</div>
     <div>Level</div>
     <div>Information</div>
-    <div style="text-align:right;">Proof</div>
+    <div style="text-align:right;">Actions / Proof</div>
   </div>
 
   <div class="level-list" id="list">
@@ -916,6 +1000,7 @@ function updateAuthUI() {
   } else {
     loginPanel.classList.remove("hidden");
     editorPanel.classList.add("hidden");
+    closeEditModal();
   }
 
   loadLevels();
@@ -1055,54 +1140,164 @@ function renderLevels(levels) {
             </span>
           </div>
 
-          <div class="level-actions">
-            ${
-              proofURL
-                ? `
-                  <a
-                    class="proof-link"
-                    href="${escapeHTML(proofURL)}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Watch Proof ↗
-                  </a>
-                `
-                : ""
-            }
-
-            ${
-              currentUser
-                ? `
-                  <button
-                    class="delete-btn"
-                    data-delete="${escapeHTML(lvl.id)}"
-                  >
-                    Delete
-                  </button>
-                `
-                : ""
-            }
-          </div>
-
         </div>
 
-        <div></div>
+        <div class="level-actions">
+          ${
+            proofURL
+              ? `
+                <a
+                  class="proof-link"
+                  href="${escapeHTML(proofURL)}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Watch Proof ↗
+                </a>
+              `
+              : ""
+          }
+
+          ${
+            currentUser
+              ? `
+                <button
+                  class="edit-btn"
+                  type="button"
+                  data-edit="${escapeHTML(lvl.id)}"
+                >
+                  Edit
+                </button>
+                <button
+                  class="delete-btn"
+                  type="button"
+                  data-delete="${escapeHTML(lvl.id)}"
+                >
+                  Delete
+                </button>
+              `
+              : ""
+          }
+        </div>
 
       </div>
     `;
   }).join("");
 }
 
-/* DELETE LEVEL */
+/* ROW ACTION LISTENERS */
 
 document.getElementById("list").addEventListener("click", event => {
-  const button = event.target.closest("[data-delete]");
+  const editButton = event.target.closest("[data-edit]");
+  if (editButton) {
+    openEditModal(editButton.dataset.edit);
+    return;
+  }
 
-  if (!button) return;
-
-  deleteLevel(button.dataset.delete);
+  const deleteButton = event.target.closest("[data-delete]");
+  if (deleteButton) {
+    deleteLevel(deleteButton.dataset.delete);
+  }
 });
+
+/* EDIT PUBLISHED LEVEL */
+
+function openEditModal(id) {
+  if (!currentUser) {
+    return alert("Log in as an editor first.");
+  }
+
+  const level = allLevels.find(item => String(item.id) === String(id));
+  if (!level) return;
+
+  document.getElementById("editRowId").value = level.id;
+  document.getElementById("editRank").value = level.rank ?? "";
+  document.getElementById("editName").value = level.name ?? "";
+  document.getElementById("editCreator").value = level.creator ?? "";
+  document.getElementById("editVerifier").value = level.verifier ?? "";
+  document.getElementById("editLevelId").value = level.level_id ?? "";
+  document.getElementById("editVideoUrl").value = level.video_url ?? "";
+
+  document.getElementById("editModal").classList.remove("hidden");
+}
+
+function closeEditModal() {
+  document.getElementById("editModal").classList.add("hidden");
+  document.getElementById("editRowId").value = "";
+}
+
+async function saveEditedLevel() {
+  if (!currentUser) {
+    return alert("Log in as an editor first.");
+  }
+
+  const id = document.getElementById("editRowId").value;
+  const newRank = parseInt(document.getElementById("editRank").value, 10);
+  const name = document.getElementById("editName").value.trim();
+
+  if (!id || !newRank || newRank < 1 || !name) {
+    return alert("Valid Rank (1 or higher) and Level Name are required.");
+  }
+
+  const currentLevel = allLevels.find(item => String(item.id) === String(id));
+  const oldRank = currentLevel ? Number(currentLevel.rank) : null;
+
+  // Shift affected ranks when moving a level up or down
+  if (oldRank !== null && oldRank !== newRank) {
+    if (newRank < oldRank) {
+      const toShiftDown = allLevels
+        .filter(item => String(item.id) !== String(id) && item.rank >= newRank && item.rank < oldRank)
+        .sort((a, b) => b.rank - a.rank);
+
+      for (const item of toShiftDown) {
+        const { error: shiftErr } = await sb
+          .from("Levels")
+          .update({ rank: item.rank + 1 })
+          .eq("id", item.id);
+        if (shiftErr) {
+          return alert("Could not update rank order: " + shiftErr.message);
+        }
+      }
+    } else {
+      const toShiftUp = allLevels
+        .filter(item => String(item.id) !== String(id) && item.rank > oldRank && item.rank <= newRank)
+        .sort((a, b) => a.rank - b.rank);
+
+      for (const item of toShiftUp) {
+        const { error: shiftErr } = await sb
+          .from("Levels")
+          .update({ rank: item.rank - 1 })
+          .eq("id", item.id);
+        if (shiftErr) {
+          return alert("Could not update rank order: " + shiftErr.message);
+        }
+      }
+    }
+  }
+
+  const updatedPayload = {
+    rank: newRank,
+    name,
+    creator: document.getElementById("editCreator").value.trim(),
+    verifier: document.getElementById("editVerifier").value.trim(),
+    level_id: document.getElementById("editLevelId").value.trim(),
+    video_url: document.getElementById("editVideoUrl").value.trim()
+  };
+
+  const { error } = await sb
+    .from("Levels")
+    .update(updatedPayload)
+    .eq("id", id);
+
+  if (error) {
+    alert("Could not save edits: " + error.message);
+  } else {
+    closeEditModal();
+    loadLevels();
+  }
+}
+
+/* DELETE LEVEL */
 
 async function deleteLevel(id) {
   if (!currentUser) return;
@@ -1123,25 +1318,44 @@ async function deleteLevel(id) {
   }
 }
 
-/* ADD LEVEL */
+/* ADD LEVEL (WITH AUTOMATIC DOWNWARD RANK SHIFT) */
 
 async function addLevel() {
   if (!currentUser) {
     return alert("Log in as an editor first.");
   }
 
+  const targetRank = parseInt(document.getElementById("rank").value, 10);
+  const name = document.getElementById("name").value.trim();
+
+  if (!targetRank || targetRank < 1 || !name) {
+    return alert("Rank (1 or higher) and Level Name are required.");
+  }
+
+  // Push existing levels at or below targetRank down by +1 (from bottom up)
+  const levelsToPushDown = allLevels
+    .filter(lvl => Number(lvl.rank) >= targetRank)
+    .sort((a, b) => Number(b.rank) - Number(a.rank));
+
+  for (const lvl of levelsToPushDown) {
+    const { error: pushError } = await sb
+      .from("Levels")
+      .update({ rank: Number(lvl.rank) + 1 })
+      .eq("id", lvl.id);
+
+    if (pushError) {
+      return alert("Could not shift existing ranks: " + pushError.message);
+    }
+  }
+
   const payload = {
-    rank: parseInt(document.getElementById("rank").value, 10),
-    name: document.getElementById("name").value.trim(),
+    rank: targetRank,
+    name,
     creator: document.getElementById("creator").value.trim(),
     verifier: document.getElementById("verifier").value.trim(),
     level_id: document.getElementById("level_id").value.trim(),
     video_url: document.getElementById("video_url").value.trim()
   };
-
-  if (!payload.rank || !payload.name) {
-    return alert("Rank and Level Name are required.");
-  }
 
   const { error } = await sb
     .from("Levels")
