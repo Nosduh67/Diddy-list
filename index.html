@@ -896,36 +896,45 @@ function escapeHTML(value) {
   })[char]);
 }
 
-/* YOUTUBE THUMBNAIL DETECTION */
+/* VIDEO THUMBNAIL & PROOF DETECTION (YOUTUBE + MEDAL) */
 
-function getYouTubeId(url) {
-  if (!url) return null;
+function getVideoDetails(url) {
+  if (!url) return { ytId: null, thumbUrl: null };
 
   try {
     const parsed = new URL(url);
     const host = parsed.hostname.replace(/^www\./, "");
 
+    // 1. Check YouTube
     if (host === "youtu.be") {
       const id = parsed.pathname.split("/")[1];
-      return /^[a-zA-Z0-9_-]{11}$/.test(id || "") ? id : null;
+      if (/^[a-zA-Z0-9_-]{11}$/.test(id || "")) {
+        return { ytId: id, thumbUrl: `https://img.youtube.com/vi/${id}/hqdefault.jpg` };
+      }
     }
 
-    if (
-      host === "youtube.com" ||
-      host === "m.youtube.com" ||
-      host === "youtube-nocookie.com"
-    ) {
+    if (host === "youtube.com" || host === "m.youtube.com" || host === "youtube-nocookie.com") {
       const id =
         parsed.searchParams.get("v") ||
         parsed.pathname.match(/\/(?:embed|shorts)\/([a-zA-Z0-9_-]{11})/)?.[1];
+      if (/^[a-zA-Z0-9_-]{11}$/.test(id || "")) {
+        return { ytId: id, thumbUrl: `https://img.youtube.com/vi/${id}/hqdefault.jpg` };
+      }
+    }
 
-      return /^[a-zA-Z0-9_-]{11}$/.test(id || "") ? id : null;
+    // 2. Check Medal TV Clips
+    if (host === "medal.tv") {
+      const medalMatch = parsed.pathname.match(/\/clips\/([a-zA-Z0-9_-]+)/);
+      if (medalMatch && medalMatch[1]) {
+        const clipId = medalMatch[1];
+        return { ytId: null, thumbUrl: `https://cdn.medal.tv/clips/thumbnail/${clipId}.jpg` };
+      }
     }
   } catch {
-    return null;
+    return { ytId: null, thumbUrl: null };
   }
 
-  return null;
+  return { ytId: null, thumbUrl: null };
 }
 
 /* SAFE LINKS */
@@ -1088,12 +1097,7 @@ function renderLevels(levels) {
   }
 
   container.innerHTML = levels.map(lvl => {
-    const ytId = getYouTubeId(lvl.video_url);
-
-    const thumbUrl = ytId
-      ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`
-      : null;
-
+    const { thumbUrl } = getVideoDetails(lvl.video_url);
     const proofURL = safeURL(lvl.video_url);
 
     return `
@@ -1115,7 +1119,7 @@ function renderLevels(levels) {
                   src="${thumbUrl}"
                   alt="${escapeHTML(lvl.name)} thumbnail"
                   loading="lazy"
-                  onerror="this.style.display='none'"
+                  onerror="this.onerror=null; this.parentNode.innerHTML='<div class=\\'thumbnail-placeholder\\'></div>';"
                 >
               `
               : `
@@ -1242,7 +1246,6 @@ async function saveEditedLevel() {
   const currentLevel = allLevels.find(item => String(item.id) === String(id));
   const oldRank = currentLevel ? Number(currentLevel.rank) : null;
 
-  // Shift affected ranks when moving a level up or down
   if (oldRank !== null && oldRank !== newRank) {
     if (newRank < oldRank) {
       const toShiftDown = allLevels
@@ -1332,7 +1335,6 @@ async function addLevel() {
     return alert("Rank (1 or higher) and Level Name are required.");
   }
 
-  // Push existing levels at or below targetRank down by +1 (from bottom up)
   const levelsToPushDown = allLevels
     .filter(lvl => Number(lvl.rank) >= targetRank)
     .sort((a, b) => Number(b.rank) - Number(a.rank));
