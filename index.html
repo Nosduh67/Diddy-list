@@ -424,6 +424,18 @@ button {
   background: #363943;
 }
 
+.auth-toggle-link {
+  color: #b5a0e5;
+  font-size: 11px;
+  cursor: pointer;
+  margin-top: 10px;
+  display: inline-block;
+}
+
+.auth-toggle-link:hover {
+  text-decoration: underline;
+}
+
 .hidden {
   display: none !important;
 }
@@ -698,12 +710,20 @@ footer {
     <p>The official Diddy List challenge rankings, records, and points leaderboard.</p>
   </div>
 
-  <!-- EDITOR LOGIN -->
+  <!-- EDITOR LOGIN / SIGN UP -->
   <div class="panel" id="loginPanel" style="max-width: 380px;">
-    <h3>Editor Login</h3>
+    <h3 id="authTitle">Editor Login</h3>
+    
     <input type="email" id="loginEmail" placeholder="Editor Email" />
     <input type="password" id="loginPassword" placeholder="Password" />
-    <button class="primary-btn" onclick="login()">Log In</button>
+    
+    <button class="primary-btn" id="authSubmitBtn" onclick="handleAuthSubmit()">Log In</button>
+    
+    <div>
+      <span class="auth-toggle-link" id="authToggleLink" onclick="toggleAuthMode()">
+        Don't have an account? Sign Up
+      </span>
+    </div>
   </div>
 
   <!-- EDITOR CONTROLS & APPROVAL QUEUES -->
@@ -859,6 +879,7 @@ let allLevels = [];
 let approvedRecords = [];
 let pendingLevelSubs = [];
 let pendingRecords = [];
+let isSignUpMode = false;
 
 function escapeHTML(value) {
   return String(value ?? "").replace(/[&<>"']/g, char => ({
@@ -961,6 +982,50 @@ function applyTemplate(idx) {
   document.getElementById("video_url").value = tpl.video_url;
 }
 
+/* AUTH & ACCOUNT CREATION */
+
+function toggleAuthMode() {
+  isSignUpMode = !isSignUpMode;
+  const title = document.getElementById("authTitle");
+  const btn = document.getElementById("authSubmitBtn");
+  const toggle = document.getElementById("authToggleLink");
+
+  if (isSignUpMode) {
+    title.textContent = "Create Editor Account";
+    btn.textContent = "Sign Up";
+    toggle.textContent = "Already have an account? Log In";
+  } else {
+    title.textContent = "Editor Login";
+    btn.textContent = "Log In";
+    toggle.textContent = "Don't have an account? Sign Up";
+  }
+}
+
+async function handleAuthSubmit() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+
+  if (!email || !password) {
+    return alert("Please enter both email and password.");
+  }
+
+  if (isSignUpMode) {
+    const { data, error } = await sb.auth.signUp({ email, password });
+    if (error) {
+      alert("Sign up failed: " + error.message);
+    } else {
+      if (data?.session) {
+        alert("Account created successfully!");
+      } else {
+        alert("Account created! Check your email to confirm registration (if email confirmation is turned on).");
+      }
+    }
+  } else {
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) alert("Login failed: " + error.message);
+  }
+}
+
 function updateAuthUI() {
   const loginPanel = document.getElementById("loginPanel");
   const editorPanel = document.getElementById("editorPanel");
@@ -977,13 +1042,6 @@ function updateAuthUI() {
   }
 
   loadData();
-}
-
-async function login() {
-  const email = document.getElementById("loginEmail").value.trim();
-  const password = document.getElementById("loginPassword").value;
-  const { error } = await sb.auth.signInWithPassword({ email, password });
-  if (error) alert("Login failed: " + error.message);
 }
 
 async function logout() {
