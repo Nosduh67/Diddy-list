@@ -492,22 +492,28 @@ button {
   margin: 0 0 10px;
 }
 
-.queue-list, .template-list {
+.queue-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
 }
 
-.queue-item, .template-item {
+.queue-item {
   background: #121319;
   border: 1px solid #30333b;
-  border-radius: 3px;
-  padding: 9px 11px;
+  border-radius: 4px;
+  padding: 12px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   gap: 10px;
   font-size: 12px;
+}
+
+.queue-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .queue-actions {
@@ -516,28 +522,21 @@ button {
   flex-shrink: 0;
 }
 
-.template-info strong {
-  font-size: 12px;
+.video-preview-wrap {
+  width: 100%;
+  max-width: 480px;
+  aspect-ratio: 16 / 9;
+  background: #0b0c10;
+  border: 1px solid #2b2e38;
+  border-radius: 4px;
+  overflow: hidden;
 }
 
-.template-info span {
-  color: var(--muted);
-  font-size: 11px;
-}
-
-.template-btn {
-  flex-shrink: 0;
-  padding: 6px 9px;
-  border: 1px solid #504069;
-  border-radius: 3px;
-  background: #292333;
-  color: #c9b5ec;
-  font-size: 10px;
-  margin: 0;
-}
-
-.template-btn:hover {
-  background: #3b304d;
+.video-preview-frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
 }
 
 .form-grid {
@@ -692,6 +691,10 @@ footer {
     margin-top: 4px;
   }
 
+  .queue-top {
+    flex-direction: column;
+  }
+
   .form-grid {
     grid-template-columns: 1fr;
   }
@@ -751,7 +754,7 @@ footer {
   <!-- EDITOR CONTROLS & APPROVAL QUEUES -->
   <div class="editor-panel hidden" id="editorPanel">
     <div class="editor-header">
-      <h3>Add Level <span class="editor-email" id="editorEmail"></span></h3>
+      <h3>Editor Panel <span class="editor-email" id="editorEmail"></span></h3>
       <button class="secondary-btn" onclick="logout()">Log Out</button>
     </div>
 
@@ -770,12 +773,7 @@ footer {
     </div>
 
     <div class="editor-section">
-      <h4>Quick Level Templates (5)</h4>
-      <div class="template-list" id="templateList"></div>
-    </div>
-
-    <div class="editor-section">
-      <h4>Level Details</h4>
+      <h4>Add Level Directly</h4>
       <div class="form-grid">
         <input type="number" id="rank" min="1" placeholder="Rank (e.g. 1)" />
         <input type="text" id="name" placeholder="Level Name" />
@@ -888,14 +886,6 @@ const SUPABASE_KEY = "sb_publishable_0Byo8YMjM5x75UTZszUFrA_eDNew7hA";
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const LEVEL_TEMPLATES = [
-  { rank: 1, name: "Neon Overdrive", creator: "SampleCreator1", verifier: "SampleVerifier1", level_id: "10000001", video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-  { rank: 2, name: "Chronos Wave", creator: "SampleCreator2", verifier: "SampleVerifier2", level_id: "10000002", video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-  { rank: 3, name: "Static Pulse", creator: "SampleCreator3", verifier: "SampleVerifier3", level_id: "10000003", video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-  { rank: 4, name: "Vortex Corridor", creator: "SampleCreator4", verifier: "SampleVerifier4", level_id: "10000004", video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-  { rank: 5, name: "Eclipse Circuit", creator: "SampleCreator5", verifier: "SampleVerifier5", level_id: "10000005", video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" }
-];
-
 let currentUser = null;
 let currentNickname = "";
 let isEditor = false;
@@ -922,7 +912,7 @@ function getPointsForRank(rank) {
 }
 
 function getVideoDetails(url) {
-  if (!url) return { type: null, thumbUrl: null };
+  if (!url) return { type: null, thumbUrl: null, embedUrl: null };
   try {
     const parsed = new URL(url);
     const host = parsed.hostname.replace(/^www\./, "");
@@ -930,7 +920,11 @@ function getVideoDetails(url) {
     if (host === "youtu.be") {
       const id = parsed.pathname.split("/")[1];
       if (/^[a-zA-Z0-9_-]{11}$/.test(id || "")) {
-        return { type: "youtube", thumbUrl: `https://img.youtube.com/vi/${id}/hqdefault.jpg` };
+        return {
+          type: "youtube",
+          thumbUrl: `https://img.youtube.com/vi/${id}/hqdefault.jpg`,
+          embedUrl: `https://www.youtube.com/embed/${id}`
+        };
       }
     }
 
@@ -939,17 +933,57 @@ function getVideoDetails(url) {
         parsed.searchParams.get("v") ||
         parsed.pathname.match(/\/(?:embed|shorts)\/([a-zA-Z0-9_-]{11})/)?.[1];
       if (/^[a-zA-Z0-9_-]{11}$/.test(id || "")) {
-        return { type: "youtube", thumbUrl: `https://img.youtube.com/vi/${id}/hqdefault.jpg` };
+        return {
+          type: "youtube",
+          thumbUrl: `https://img.youtube.com/vi/${id}/hqdefault.jpg`,
+          embedUrl: `https://www.youtube.com/embed/${id}`
+        };
       }
     }
 
-    if (host === "medal.tv" && /\/clips\/[a-zA-Z0-9_-]+/.test(parsed.pathname)) {
-      return { type: "medal", thumbUrl: null };
+    if (host === "medal.tv") {
+      const clipMatch = parsed.pathname.match(/\/clips\/([a-zA-Z0-9_-]+)/);
+      if (clipMatch && clipMatch[1]) {
+        return {
+          type: "medal",
+          thumbUrl: null,
+          embedUrl: `https://medal.tv/embed/clips/${encodeURIComponent(clipMatch[1])}`
+        };
+      }
     }
   } catch {
-    return { type: null, thumbUrl: null };
+    return { type: null, thumbUrl: null, embedUrl: null };
   }
-  return { type: null, thumbUrl: null };
+  return { type: null, thumbUrl: null, embedUrl: null };
+}
+
+function renderVideoPreview(videoUrl) {
+  const safeProof = safeURL(videoUrl);
+  if (!safeProof) {
+    return `<div class="helper-note">No video link provided.</div>`;
+  }
+
+  const { embedUrl } = getVideoDetails(safeProof);
+  return `
+    ${
+      embedUrl
+        ? `
+          <div class="video-preview-wrap">
+            <iframe
+              class="video-preview-frame"
+              src="${escapeHTML(embedUrl)}"
+              allow="autoplay; encrypted-media; picture-in-picture"
+              allowfullscreen
+              loading="lazy"
+            ></iframe>
+          </div>
+        `
+        : ""
+    }
+    <div>
+      <a class="proof-link" href="${escapeHTML(safeProof)}" target="_blank" rel="noopener noreferrer">Open Video Proof ↗</a>
+    </div>
+  `;
 }
 
 function safeURL(value) {
@@ -980,30 +1014,6 @@ function switchView(view) {
     tabLb.classList.remove("active");
     tabList.classList.add("active");
   }
-}
-
-function renderTemplates() {
-  const listEl = document.getElementById("templateList");
-  listEl.innerHTML = LEVEL_TEMPLATES.map((tpl, idx) => `
-    <div class="template-item">
-      <div class="template-info">
-        <strong>#${tpl.rank} — ${escapeHTML(tpl.name)}</strong><br>
-        <span>By ${escapeHTML(tpl.creator)} · ID: ${escapeHTML(tpl.level_id)}</span>
-      </div>
-      <button class="template-btn" type="button" onclick="applyTemplate(${idx})">Use Template</button>
-    </div>
-  `).join("");
-}
-
-function applyTemplate(idx) {
-  const tpl = LEVEL_TEMPLATES[idx];
-  if (!tpl) return;
-  document.getElementById("rank").value = tpl.rank;
-  document.getElementById("name").value = tpl.name;
-  document.getElementById("creator").value = tpl.creator;
-  document.getElementById("verifier").value = tpl.verifier;
-  document.getElementById("level_id").value = tpl.level_id;
-  document.getElementById("video_url").value = tpl.video_url;
 }
 
 /* AUTH & NICKNAME ACCOUNT CREATION */
@@ -1369,17 +1379,20 @@ function renderEditorQueues() {
   } else {
     lvlQueue.innerHTML = pendingLevelSubs.map(sub => `
       <div class="queue-item">
-        <div>
-          <strong>${escapeHTML(sub.name)}</strong> (Suggested #${escapeHTML(sub.suggested_rank || 1)})<br>
-          <span style="color:#999ca7;font-size:11px;">
-            Creator: ${escapeHTML(sub.creator || "Unknown")} · Verifier: ${escapeHTML(sub.verifier || "Unknown")} · ID: ${escapeHTML(sub.level_id || "N/A")}
-            ${sub.submitter_name ? `· By ${escapeHTML(sub.submitter_name)}` : ""}
-          </span>
+        <div class="queue-top">
+          <div>
+            <strong>${escapeHTML(sub.name)}</strong> (Suggested #${escapeHTML(sub.suggested_rank || 1)})<br>
+            <span style="color:#999ca7;font-size:11px;">
+              Creator: ${escapeHTML(sub.creator || "Unknown")} · Verifier: ${escapeHTML(sub.verifier || "Unknown")} · ID: ${escapeHTML(sub.level_id || "N/A")}
+              ${sub.submitter_name ? `· By ${escapeHTML(sub.submitter_name)}` : ""}
+            </span>
+          </div>
+          <div class="queue-actions">
+            <button class="approve-btn" type="button" onclick="approveLevelSubmission(${sub.id})">Approve</button>
+            <button class="delete-btn" type="button" onclick="rejectLevelSubmission(${sub.id})">Reject</button>
+          </div>
         </div>
-        <div class="queue-actions">
-          <button class="approve-btn" type="button" onclick="approveLevelSubmission(${sub.id})">Approve</button>
-          <button class="delete-btn" type="button" onclick="rejectLevelSubmission(${sub.id})">Reject</button>
-        </div>
+        ${renderVideoPreview(sub.video_url)}
       </div>
     `).join("");
   }
@@ -1392,17 +1405,18 @@ function renderEditorQueues() {
     recQueue.innerHTML = pendingRecords.map(rec => {
       const lvl = levelById.get(String(rec.level_id_ref));
       const lvlLabel = lvl ? `#${lvl.rank} ${lvl.name} (${getPointsForRank(lvl.rank)} pts)` : `Level #${rec.level_id_ref}`;
-      const proof = safeURL(rec.video_url);
       return `
         <div class="queue-item">
-          <div>
-            <strong>${escapeHTML(rec.player_name)}</strong> cleared <strong>${escapeHTML(lvlLabel)}</strong><br>
-            ${proof ? `<a class="proof-link" href="${escapeHTML(proof)}" target="_blank" rel="noopener noreferrer">Proof Link ↗</a>` : ""}
+          <div class="queue-top">
+            <div>
+              <strong>${escapeHTML(rec.player_name)}</strong> cleared <strong>${escapeHTML(lvlLabel)}</strong>
+            </div>
+            <div class="queue-actions">
+              <button class="approve-btn" type="button" onclick="approveRecord(${rec.id})">Approve</button>
+              <button class="delete-btn" type="button" onclick="rejectRecord(${rec.id})">Reject</button>
+            </div>
           </div>
-          <div class="queue-actions">
-            <button class="approve-btn" type="button" onclick="approveRecord(${rec.id})">Approve</button>
-            <button class="delete-btn" type="button" onclick="rejectRecord(${rec.id})">Reject</button>
-          </div>
+          ${renderVideoPreview(rec.video_url)}
         </div>
       `;
     }).join("");
@@ -1588,8 +1602,6 @@ async function addLevel() {
     loadData();
   }
 }
-
-renderTemplates();
 
 sb.auth.onAuthStateChange((_event, session) => {
   currentUser = session?.user ?? null;
