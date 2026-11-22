@@ -436,6 +436,18 @@ button {
   text-decoration: underline;
 }
 
+.user-status-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 12px 17px;
+  margin-bottom: 20px;
+  font-size: 12px;
+}
+
 .hidden {
   display: none !important;
 }
@@ -712,9 +724,9 @@ footer {
 
   <!-- EDITOR LOGIN / SIGN UP -->
   <div class="panel" id="loginPanel" style="max-width: 380px;">
-    <h3 id="authTitle">Editor Login</h3>
+    <h3 id="authTitle">Account Login</h3>
     
-    <input type="email" id="loginEmail" placeholder="Editor Email" />
+    <input type="email" id="loginEmail" placeholder="Email Address" />
     <input type="password" id="loginPassword" placeholder="Password" />
     
     <button class="primary-btn" id="authSubmitBtn" onclick="handleAuthSubmit()">Log In</button>
@@ -726,7 +738,13 @@ footer {
     </div>
   </div>
 
-  <!-- EDITOR CONTROLS & APPROVAL QUEUES -->
+  <!-- STANDARD USER LOGGED IN BAR -->
+  <div class="user-status-card hidden" id="userStatusPanel">
+    <div>Logged in as <strong id="loggedUserEmail"></strong> <span style="color:#999ca7;margin-left:6px;">(Member Account)</span></div>
+    <button class="secondary-btn" onclick="logout()">Log Out</button>
+  </div>
+
+  <!-- EDITOR CONTROLS & APPROVAL QUEUES (ONLY SHOWN FOR WHITELISTED EDITORS) -->
   <div class="editor-panel hidden" id="editorPanel">
     <div class="editor-header">
       <h3>Add Level <span class="editor-email" id="editorEmail"></span></h3>
@@ -875,6 +893,7 @@ const LEVEL_TEMPLATES = [
 ];
 
 let currentUser = null;
+let isEditor = false;
 let allLevels = [];
 let approvedRecords = [];
 let pendingLevelSubs = [];
@@ -991,11 +1010,11 @@ function toggleAuthMode() {
   const toggle = document.getElementById("authToggleLink");
 
   if (isSignUpMode) {
-    title.textContent = "Create Editor Account";
+    title.textContent = "Create Account";
     btn.textContent = "Sign Up";
     toggle.textContent = "Already have an account? Log In";
   } else {
-    title.textContent = "Editor Login";
+    title.textContent = "Account Login";
     btn.textContent = "Log In";
     toggle.textContent = "Don't have an account? Sign Up";
   }
@@ -1017,7 +1036,7 @@ async function handleAuthSubmit() {
       if (data?.session) {
         alert("Account created successfully!");
       } else {
-        alert("Account created! Check your email to confirm registration (if email confirmation is turned on).");
+        alert("Account created! You can log in now.");
       }
     }
   } else {
@@ -1026,18 +1045,39 @@ async function handleAuthSubmit() {
   }
 }
 
-function updateAuthUI() {
+async function updateAuthUI() {
   const loginPanel = document.getElementById("loginPanel");
   const editorPanel = document.getElementById("editorPanel");
+  const userStatusPanel = document.getElementById("userStatusPanel");
+  const loggedUserEmail = document.getElementById("loggedUserEmail");
   const editorEmail = document.getElementById("editorEmail");
 
   if (currentUser) {
     loginPanel.classList.add("hidden");
-    editorPanel.classList.remove("hidden");
-    editorEmail.textContent = `(${currentUser.email})`;
+
+    // Check if logged-in user is listed in the Editors whitelist table
+    const { data: editorData } = await sb
+      .from("Editors")
+      .select("email")
+      .eq("email", currentUser.email)
+      .maybeSingle();
+
+    isEditor = !!editorData;
+
+    if (isEditor) {
+      userStatusPanel.classList.add("hidden");
+      editorPanel.classList.remove("hidden");
+      editorEmail.textContent = `(${currentUser.email})`;
+    } else {
+      editorPanel.classList.add("hidden");
+      userStatusPanel.classList.remove("hidden");
+      loggedUserEmail.textContent = currentUser.email;
+    }
   } else {
+    isEditor = false;
     loginPanel.classList.remove("hidden");
     editorPanel.classList.add("hidden");
+    userStatusPanel.classList.add("hidden");
     closeEditModal();
   }
 
@@ -1066,7 +1106,7 @@ async function loadData() {
   filterLevels();
   renderLeaderboard();
 
-  if (currentUser) {
+  if (isEditor) {
     await loadEditorQueues();
   }
 }
@@ -1131,7 +1171,7 @@ function renderLevels(levels) {
         <div class="level-actions">
           ${proofURL ? `<a class="proof-link" href="${escapeHTML(proofURL)}" target="_blank" rel="noopener noreferrer">Watch Proof ↗</a>` : ""}
           ${
-            currentUser
+            isEditor
               ? `
                 <button class="edit-btn" type="button" data-edit="${escapeHTML(lvl.id)}">Edit</button>
                 <button class="delete-btn" type="button" data-delete="${escapeHTML(lvl.id)}">Delete</button>
@@ -1241,6 +1281,8 @@ async function submitRecord() {
 /* EDITOR APPROVAL QUEUES */
 
 async function loadEditorQueues() {
+  if (!isEditor) return;
+
   const [{ data: subs }, { data: recs }] = await Promise.all([
     sb.from("LevelSubmissions").select("*").eq("status", "pending").order("created_at", { ascending: true }),
     sb.from("Records").select("*").eq("status", "pending").order("created_at", { ascending: true })
@@ -1313,7 +1355,7 @@ async function shiftRanksDownFrom(targetRank, excludeId = null) {
 }
 
 async function approveLevelSubmission(subId) {
-  if (!currentUser) return;
+  if (!isEditor) return alert("Access denied: Editor status required.");
   const sub = pendingLevelSubs.find(s => String(s.id) === String(subId));
   if (!sub) return;
 
@@ -1336,20 +1378,20 @@ async function approveLevelSubmission(subId) {
 }
 
 async function rejectLevelSubmission(subId) {
-  if (!currentUser) return;
+  if (!isEditor) return alert("Access denied: Editor status required.");
   await sb.from("LevelSubmissions").update({ status: "rejected" }).eq("id", subId);
   loadEditorQueues();
 }
 
 async function approveRecord(recId) {
-  if (!currentUser) return;
+  if (!isEditor) return alert("Access denied: Editor status required.");
   const { error } = await sb.from("Records").update({ status: "approved" }).eq("id", recId);
   if (error) return alert("Could not approve record: " + error.message);
   loadData();
 }
 
 async function rejectRecord(recId) {
-  if (!currentUser) return;
+  if (!isEditor) return alert("Access denied: Editor status required.");
   await sb.from("Records").update({ status: "rejected" }).eq("id", recId);
   loadEditorQueues();
 }
@@ -1365,7 +1407,7 @@ document.getElementById("list").addEventListener("click", event => {
 });
 
 function openEditModal(id) {
-  if (!currentUser) return alert("Log in as an editor first.");
+  if (!isEditor) return alert("Access denied: Editor status required.");
   const level = allLevels.find(item => String(item.id) === String(id));
   if (!level) return;
 
@@ -1385,7 +1427,7 @@ function closeEditModal() {
 }
 
 async function saveEditedLevel() {
-  if (!currentUser) return alert("Log in as an editor first.");
+  if (!isEditor) return alert("Access denied: Editor status required.");
 
   const id = document.getElementById("editRowId").value;
   const newRank = parseInt(document.getElementById("editRank").value, 10);
@@ -1439,7 +1481,7 @@ async function saveEditedLevel() {
 }
 
 async function deleteLevel(id) {
-  if (!currentUser) return;
+  if (!isEditor) return alert("Access denied: Editor status required.");
   if (!confirm("Are you sure you want to delete this level?")) return;
 
   const { error } = await sb.from("Levels").delete().eq("id", id);
@@ -1448,7 +1490,7 @@ async function deleteLevel(id) {
 }
 
 async function addLevel() {
-  if (!currentUser) return alert("Log in as an editor first.");
+  if (!isEditor) return alert("Access denied: Editor status required.");
 
   const targetRank = parseInt(document.getElementById("rank").value, 10);
   const name = document.getElementById("name").value.trim();
