@@ -85,7 +85,7 @@ header {
 .header-nav {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   font-size: 12px;
   font-weight: 700;
 }
@@ -184,8 +184,12 @@ header {
 
 .level-list {
   border: 1px solid var(--border);
-  border-radius: 0 0 5px 5px;
+  border-radius: 5px;
   overflow: hidden;
+}
+
+.column-headings + .level-list {
+  border-radius: 0 0 5px 5px;
 }
 
 .level-row {
@@ -293,6 +297,18 @@ header {
   background: #18232c;
   border: 1px solid #2f4a5e;
   color: #98c8eb;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.hardest-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: #2d2417;
+  border: 1px solid #69512b;
+  color: #f0c975;
   font-size: 10px;
   font-weight: 700;
 }
@@ -600,24 +616,40 @@ button {
   font-size: 13px;
 }
 
-/* LEADERBOARD */
+/* LEADERBOARD & PLAYERS */
 
 .lb-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 11px 14px;
+  gap: 12px;
+  padding: 12px 14px;
   background: #1b1d23;
   border-bottom: 1px solid #30323a;
+  cursor: pointer;
+  transition: background .12s;
 }
 
 .lb-row:last-child {
   border-bottom: none;
 }
 
+.lb-row:hover {
+  background: #24262e;
+}
+
 .lb-points {
   font-weight: 750;
   color: #c9b5ec;
+  white-space: nowrap;
+}
+
+.hardest-highlight {
+  background: #181622;
+  border: 1px solid #4d3f69;
+  border-radius: 4px;
+  padding: 12px;
+  margin-top: 8px;
 }
 
 /* MODALS */
@@ -709,6 +741,15 @@ footer {
     padding: 0 12px;
   }
 
+  .header-nav {
+    gap: 6px;
+  }
+
+  .nav-btn {
+    padding: 5px 7px;
+    font-size: 11px;
+  }
+
   .list-toolbar {
     align-items: flex-start;
     flex-direction: column;
@@ -781,6 +822,7 @@ footer {
     <div class="header-nav">
       <button class="nav-btn active" type="button" id="tabListBtn" onclick="switchView('list')">LIST</button>
       <button class="nav-btn" type="button" id="tabLeaderboardBtn" onclick="switchView('leaderboard')">LEADERBOARD</button>
+      <button class="nav-btn" type="button" id="tabPlayersBtn" onclick="switchView('players')">PLAYERS</button>
     </div>
   </div>
 </header>
@@ -925,9 +967,57 @@ footer {
   <div id="leaderboardView" class="hidden">
     <div class="list-toolbar">
       <h2>Points Leaderboard</h2>
+      <span class="helper-note" style="margin-top:0;">Click any player to view their hardest &amp; other completions</span>
     </div>
     <div class="level-list" id="leaderboardList">
       <div class="empty">Loading leaderboard...</div>
+    </div>
+  </div>
+
+  <!-- PLAYERS SEARCH & DIRECTORY VIEW -->
+  <div id="playersView" class="hidden">
+    <div class="list-toolbar">
+      <h2>Search Players</h2>
+      <input
+        type="text"
+        class="search-box"
+        id="playerSearchInput"
+        placeholder="Search username..."
+        oninput="renderPlayersDirectory()"
+      />
+    </div>
+    <div class="level-list" id="playersList">
+      <div class="empty">Loading players...</div>
+    </div>
+  </div>
+
+  <!-- PLAYER PROFILE MODAL (HARDEST + ALL COMPLETIONS) -->
+  <div class="modal-backdrop hidden" id="playerProfileModal" onclick="handleBackdropClose(event, 'playerProfileModal')">
+    <div class="modal-card wide-modal">
+      <div class="queue-top">
+        <div>
+          <h3 id="playerProfileName" style="margin-bottom:4px;">Player Profile</h3>
+          <div class="helper-note" id="playerProfileStats" style="margin-top:0;"></div>
+        </div>
+        <button class="secondary-btn" type="button" onclick="closePlayerProfileModal()">Close</button>
+      </div>
+
+      <h4 style="text-transform:uppercase;font-size:10px;letter-spacing:.8px;color:#a5a5ae;margin:16px 0 6px;">
+        Hardest Completion
+      </h4>
+      <div id="playerHardestCompletion"></div>
+
+      <h4 style="text-transform:uppercase;font-size:10px;letter-spacing:.8px;color:#a5a5ae;margin:18px 0 6px;">
+        All Completions
+      </h4>
+      <div class="record-cards-list" id="playerAllCompletions"></div>
+
+      <div id="playerVerifiedSection" class="hidden">
+        <h4 style="text-transform:uppercase;font-size:10px;letter-spacing:.8px;color:#a5a5ae;margin:18px 0 6px;">
+          Verified Levels
+        </h4>
+        <div class="record-cards-list" id="playerVerifiedLevels"></div>
+      </div>
     </div>
   </div>
 
@@ -1011,6 +1101,7 @@ let pendingLevelSubs = [];
 let pendingRecords = [];
 let signedUpUsers = [];
 let activeModalLevelId = null;
+let activeModalPlayerName = null;
 let isSignUpMode = false;
 
 function escapeHTML(value) {
@@ -1150,19 +1241,30 @@ function renderVideoPreview(videoUrl, customThumbUrl = null) {
 function switchView(view) {
   const listView = document.getElementById("listView");
   const lbView = document.getElementById("leaderboardView");
+  const playersView = document.getElementById("playersView");
+
   const tabList = document.getElementById("tabListBtn");
   const tabLb = document.getElementById("tabLeaderboardBtn");
+  const tabPlayers = document.getElementById("tabPlayersBtn");
+
+  listView.classList.add("hidden");
+  lbView.classList.add("hidden");
+  playersView.classList.add("hidden");
+
+  tabList.classList.remove("active");
+  tabLb.classList.remove("active");
+  tabPlayers.classList.remove("active");
 
   if (view === "leaderboard") {
-    listView.classList.add("hidden");
     lbView.classList.remove("hidden");
-    tabList.classList.remove("active");
     tabLb.classList.add("active");
     renderLeaderboard();
+  } else if (view === "players") {
+    playersView.classList.remove("hidden");
+    tabPlayers.classList.add("active");
+    renderPlayersDirectory();
   } else {
-    lbView.classList.add("hidden");
     listView.classList.remove("hidden");
-    tabLb.classList.remove("active");
     tabList.classList.add("active");
   }
 }
@@ -1171,7 +1273,150 @@ function handleBackdropClose(event, modalId) {
   if (event.target.id === modalId) {
     document.getElementById(modalId).classList.add("hidden");
     if (modalId === "levelRecordsModal") activeModalLevelId = null;
+    if (modalId === "playerProfileModal") activeModalPlayerName = null;
   }
+}
+
+/* PLAYER STATS & PROFILE MODAL */
+
+function buildPlayerStatsMap() {
+  const levelById = new Map(allLevels.map(l => [String(l.id), l]));
+  const map = new Map();
+
+  function ensurePlayer(rawName) {
+    const clean = String(rawName ?? "").trim();
+    if (!clean || clean.toLowerCase() === "unknown") return null;
+    const key = clean.toLowerCase();
+    if (!map.has(key)) {
+      map.set(key, {
+        player: clean,
+        points: 0,
+        completions: [],
+        verifiedLevels: []
+      });
+    }
+    return map.get(key);
+  }
+
+  for (const p of signedUpUsers) {
+    ensurePlayer(p?.nickname);
+  }
+
+  for (const lvl of allLevels) {
+    const pts = getPointsForRank(lvl.rank);
+    const verEntry = ensurePlayer(lvl.verifier);
+    if (verEntry) {
+      verEntry.points += pts;
+      verEntry.verifiedLevels.push({ level: lvl, points: pts });
+    }
+  }
+
+  for (const rec of approvedRecords) {
+    const lvl = levelById.get(String(rec.level_id_ref));
+    if (!lvl) continue;
+    const plEntry = ensurePlayer(rec.player_name);
+    if (!plEntry) continue;
+    const pts = getPointsForRank(lvl.rank);
+    plEntry.points += pts;
+    plEntry.completions.push({ record: rec, level: lvl, points: pts });
+  }
+
+  for (const entry of map.values()) {
+    entry.completions.sort((a, b) => Number(a.level.rank) - Number(b.level.rank));
+    entry.verifiedLevels.sort((a, b) => Number(a.level.rank) - Number(b.level.rank));
+  }
+
+  return map;
+}
+
+function openPlayerProfileModal(playerName) {
+  const map = buildPlayerStatsMap();
+  const entry = map.get(String(playerName ?? "").trim().toLowerCase());
+  if (!entry) return;
+
+  activeModalPlayerName = entry.player;
+
+  const hardest = entry.completions[0] || null;
+  document.getElementById("playerProfileName").textContent = entry.player;
+  document.getElementById("playerProfileStats").textContent =
+    `${entry.points} pts · ${entry.completions.length} completion${entry.completions.length === 1 ? "" : "s"}` +
+    (entry.verifiedLevels.length ? ` · ${entry.verifiedLevels.length} verified` : "");
+
+  const hardestEl = document.getElementById("playerHardestCompletion");
+  if (!hardest) {
+    hardestEl.innerHTML = `<div class="empty">No approved completions yet.</div>`;
+  } else {
+    hardestEl.innerHTML = `
+      <div class="hardest-highlight">
+        <div class="record-card-header">
+          <div>
+            <strong>#${escapeHTML(hardest.level.rank)} — ${escapeHTML(hardest.level.name)}</strong>
+            <span class="hardest-badge">HARDEST</span>
+            <span class="pts-badge">+${hardest.points} pts</span>
+          </div>
+          ${
+            isEditor
+              ? `<button class="delete-btn" type="button" onclick="deleteRecord(${hardest.record.id})">Delete Record</button>`
+              : ""
+          }
+        </div>
+        <div class="helper-note" style="margin-top:4px;margin-bottom:8px;">
+          By ${escapeHTML(hardest.level.creator || "Unknown")} · ID: ${escapeHTML(hardest.level.level_id || "N/A")}
+        </div>
+        ${renderVideoPreview(hardest.record.video_url)}
+      </div>
+    `;
+  }
+
+  const allEl = document.getElementById("playerAllCompletions");
+  if (!entry.completions.length) {
+    allEl.innerHTML = `<div class="empty">No completions recorded for this player.</div>`;
+  } else {
+    allEl.innerHTML = entry.completions.map((item, idx) => `
+      <div class="record-card">
+        <div class="record-card-header">
+          <div>
+            <strong>#${escapeHTML(item.level.rank)} — ${escapeHTML(item.level.name)}</strong>
+            ${idx === 0 ? `<span class="hardest-badge">HARDEST</span>` : ""}
+            <span class="pts-badge">+${item.points} pts</span>
+          </div>
+          ${
+            isEditor
+              ? `<button class="delete-btn" type="button" onclick="deleteRecord(${item.record.id})">Delete Record</button>`
+              : ""
+          }
+        </div>
+        ${renderVideoPreview(item.record.video_url)}
+      </div>
+    `).join("");
+  }
+
+  const verSection = document.getElementById("playerVerifiedSection");
+  const verListEl = document.getElementById("playerVerifiedLevels");
+  if (entry.verifiedLevels.length > 0) {
+    verSection.classList.remove("hidden");
+    verListEl.innerHTML = entry.verifiedLevels.map(v => `
+      <div class="record-card">
+        <div class="record-card-header">
+          <div>
+            <strong>#${escapeHTML(v.level.rank)} — ${escapeHTML(v.level.name)}</strong>
+            <span class="pts-badge">+${v.points} verifier pts</span>
+          </div>
+        </div>
+        ${renderVideoPreview(v.level.video_url, v.level.custom_thumb_url)}
+      </div>
+    `).join("");
+  } else {
+    verSection.classList.add("hidden");
+    verListEl.innerHTML = "";
+  }
+
+  document.getElementById("playerProfileModal").classList.remove("hidden");
+}
+
+function closePlayerProfileModal() {
+  activeModalPlayerName = null;
+  document.getElementById("playerProfileModal").classList.add("hidden");
 }
 
 /* LEVEL RECORDS MODAL */
@@ -1242,6 +1487,9 @@ async function deleteRecord(recordId) {
   await loadData();
   if (activeModalLevelId !== null) {
     openLevelRecordsModal(activeModalLevelId);
+  }
+  if (activeModalPlayerName !== null) {
+    openPlayerProfileModal(activeModalPlayerName);
   }
 }
 
@@ -1439,7 +1687,7 @@ async function logout() {
 async function loadData() {
   const [{ data: levels, error: lvlErr }, { data: recs, error: recErr }, { data: profiles }] = await Promise.all([
     sb.from("Levels").select("*").order("rank", { ascending: true }),
-    sb.from("Records").select("*").eq("status", "approved").order("id", { ascending: true }),
+    sb.from("Records").select("*"),
     sb.from("Profiles").select("nickname")
   ]);
 
@@ -1449,13 +1697,16 @@ async function loadData() {
   }
 
   allLevels = levels || [];
-  approvedRecords = recErr ? [] : (recs || []);
+  approvedRecords = recErr
+    ? []
+    : (recs || []).filter(r => String(r.status ?? "approved").trim().toLowerCase() === "approved");
   signedUpUsers = profiles || [];
 
   refreshSignedUpUsersList();
   populateRecordLevelSelect();
   filterLevels();
   renderLeaderboard();
+  renderPlayersDirectory();
 
   if (isEditor) {
     await loadEditorQueues();
@@ -1545,46 +1796,66 @@ function renderLevels(levels) {
 
 function renderLeaderboard() {
   const container = document.getElementById("leaderboardList");
-  const levelById = new Map(allLevels.map(l => [String(l.id), l]));
-  const totals = new Map();
-
-  function addPlayerPoints(name, pts, isRecord = false) {
-    const clean = String(name ?? "").trim();
-    if (!clean || clean.toLowerCase() === "unknown") return;
-    const entry = totals.get(clean) || { player: clean, points: 0, count: 0 };
-    entry.points += pts;
-    if (isRecord) entry.count += 1;
-    totals.set(clean, entry);
-  }
-
-  for (const lvl of allLevels) {
-    if (lvl.verifier) {
-      addPlayerPoints(lvl.verifier, getPointsForRank(lvl.rank), false);
-    }
-  }
-
-  for (const rec of approvedRecords) {
-    const lvl = levelById.get(String(rec.level_id_ref));
-    if (!lvl) continue;
-    addPlayerPoints(rec.player_name, getPointsForRank(lvl.rank), true);
-  }
-
-  const sorted = Array.from(totals.values()).sort((a, b) => b.points - a.points || b.count - a.count);
+  const statsMap = buildPlayerStatsMap();
+  const sorted = Array.from(statsMap.values())
+    .filter(p => p.points > 0 || p.completions.length > 0)
+    .sort((a, b) => b.points - a.points || b.completions.length - a.completions.length);
 
   if (sorted.length === 0) {
     container.innerHTML = `<div class="empty">No points on the leaderboard yet.</div>`;
     return;
   }
 
-  container.innerHTML = sorted.map((row, idx) => `
-    <div class="lb-row">
-      <div>
-        <strong>#${idx + 1} ${escapeHTML(row.player)}</strong>
-        <span style="color:#999ca7;font-size:11px;margin-left:8px;">(${row.count} record${row.count === 1 ? "" : "s"})</span>
+  container.innerHTML = sorted.map((row, idx) => {
+    const count = row.completions.length;
+    const hardestText = row.completions[0]
+      ? ` · Hardest: #${row.completions[0].level.rank} ${row.completions[0].level.name}`
+      : "";
+    return `
+      <div class="lb-row" data-open-player="${escapeHTML(row.player)}">
+        <div>
+          <strong>#${idx + 1} ${escapeHTML(row.player)}</strong>
+          <span style="color:#999ca7;font-size:11px;margin-left:8px;">
+            (${count} completion${count === 1 ? "" : "s"}${escapeHTML(hardestText)})
+          </span>
+        </div>
+        <div class="lb-points">${row.points} pts</div>
       </div>
-      <div class="lb-points">${row.points} pts</div>
-    </div>
-  `).join("");
+    `;
+  }).join("");
+}
+
+function renderPlayersDirectory() {
+  const container = document.getElementById("playersList");
+  const query = (document.getElementById("playerSearchInput")?.value || "").trim().toLowerCase();
+  const statsMap = buildPlayerStatsMap();
+
+  const list = Array.from(statsMap.values())
+    .filter(p => !query || p.player.toLowerCase().includes(query))
+    .sort((a, b) => b.points - a.points || a.player.localeCompare(b.player));
+
+  if (list.length === 0) {
+    container.innerHTML = `<div class="empty">No matching players found.</div>`;
+    return;
+  }
+
+  container.innerHTML = list.map(row => {
+    const count = row.completions.length;
+    const hardest = row.completions[0]
+      ? `Hardest: #${row.completions[0].level.rank} ${row.completions[0].level.name}`
+      : "No completions yet";
+    return `
+      <div class="lb-row" data-open-player="${escapeHTML(row.player)}">
+        <div>
+          <strong>${escapeHTML(row.player)}</strong>
+          <span style="color:#999ca7;font-size:11px;margin-left:8px;">
+            ${count} completion${count === 1 ? "" : "s"} · ${escapeHTML(hardest)}
+          </span>
+        </div>
+        <div class="lb-points">${row.points} pts</div>
+      </div>
+    `;
+  }).join("");
 }
 
 /* PUBLIC SUBMISSIONS */
@@ -1813,6 +2084,16 @@ document.getElementById("list").addEventListener("click", event => {
 
   const row = event.target.closest("[data-open-level]");
   if (row) openLevelRecordsModal(row.dataset.openLevel);
+});
+
+document.getElementById("leaderboardList").addEventListener("click", event => {
+  const row = event.target.closest("[data-open-player]");
+  if (row) openPlayerProfileModal(row.dataset.openPlayer);
+});
+
+document.getElementById("playersList").addEventListener("click", event => {
+  const row = event.target.closest("[data-open-player]");
+  if (row) openPlayerProfileModal(row.dataset.openPlayer);
 });
 
 function openEditModal(id) {
