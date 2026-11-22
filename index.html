@@ -313,6 +313,18 @@ header {
   font-weight: 700;
 }
 
+.verified-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: #192922;
+  border: 1px solid #2e5945;
+  color: #8fd9b5;
+  font-size: 10px;
+  font-weight: 700;
+}
+
 /* ROW ACTIONS */
 
 .level-actions {
@@ -1011,13 +1023,6 @@ footer {
         All Completions
       </h4>
       <div class="record-cards-list" id="playerAllCompletions"></div>
-
-      <div id="playerVerifiedSection" class="hidden">
-        <h4 style="text-transform:uppercase;font-size:10px;letter-spacing:.8px;color:#a5a5ae;margin:18px 0 6px;">
-          Verified Levels
-        </h4>
-        <div class="record-cards-list" id="playerVerifiedLevels"></div>
-      </div>
     </div>
   </div>
 
@@ -1056,7 +1061,7 @@ footer {
         <input type="text" id="editCustomThumb" placeholder="Custom Thumbnail URL (Optional)" style="grid-column: span 2;" />
       </div>
       <div class="helper-note">
-        Changing the Verifier automatically transfers the level's verifier points to that user.
+        Changing the Verifier automatically transfers the level's verifier points and completion credit to that user.
       </div>
       <div class="modal-actions">
         <button class="secondary-btn" type="button" onclick="closeEditModal()">Cancel</button>
@@ -1292,7 +1297,7 @@ function buildPlayerStatsMap() {
         player: clean,
         points: 0,
         completions: [],
-        verifiedLevels: []
+        completedLevelKeys: new Set()
       });
     }
     return map.get(key);
@@ -1302,28 +1307,46 @@ function buildPlayerStatsMap() {
     ensurePlayer(p?.nickname);
   }
 
-  for (const lvl of allLevels) {
-    const pts = getPointsForRank(lvl.rank);
-    const verEntry = ensurePlayer(lvl.verifier);
-    if (verEntry) {
-      verEntry.points += pts;
-      verEntry.verifiedLevels.push({ level: lvl, points: pts });
-    }
-  }
-
   for (const rec of approvedRecords) {
     const lvl = levelById.get(String(rec.level_id_ref));
     if (!lvl) continue;
     const plEntry = ensurePlayer(rec.player_name);
     if (!plEntry) continue;
     const pts = getPointsForRank(lvl.rank);
+    const lvlKey = String(lvl.id);
     plEntry.points += pts;
-    plEntry.completions.push({ record: rec, level: lvl, points: pts });
+    plEntry.completions.push({
+      record: rec,
+      level: lvl,
+      points: pts,
+      videoUrl: rec.video_url || lvl.video_url || "",
+      customThumbUrl: lvl.custom_thumb_url || null,
+      isVerification: false
+    });
+    plEntry.completedLevelKeys.add(lvlKey);
+  }
+
+  for (const lvl of allLevels) {
+    const pts = getPointsForRank(lvl.rank);
+    const verEntry = ensurePlayer(lvl.verifier);
+    if (!verEntry) continue;
+    verEntry.points += pts;
+    const lvlKey = String(lvl.id);
+    if (!verEntry.completedLevelKeys.has(lvlKey)) {
+      verEntry.completions.push({
+        record: null,
+        level: lvl,
+        points: pts,
+        videoUrl: lvl.video_url || "",
+        customThumbUrl: lvl.custom_thumb_url || null,
+        isVerification: true
+      });
+      verEntry.completedLevelKeys.add(lvlKey);
+    }
   }
 
   for (const entry of map.values()) {
     entry.completions.sort((a, b) => Number(a.level.rank) - Number(b.level.rank));
-    entry.verifiedLevels.sort((a, b) => Number(a.level.rank) - Number(b.level.rank));
   }
 
   return map;
@@ -1339,8 +1362,7 @@ function openPlayerProfileModal(playerName) {
   const hardest = entry.completions[0] || null;
   document.getElementById("playerProfileName").textContent = entry.player;
   document.getElementById("playerProfileStats").textContent =
-    `${entry.points} pts · ${entry.completions.length} completion${entry.completions.length === 1 ? "" : "s"}` +
-    (entry.verifiedLevels.length ? ` · ${entry.verifiedLevels.length} verified` : "");
+    `${entry.points} pts · ${entry.completions.length} completion${entry.completions.length === 1 ? "" : "s"}`;
 
   const hardestEl = document.getElementById("playerHardestCompletion");
   if (!hardest) {
@@ -1352,10 +1374,11 @@ function openPlayerProfileModal(playerName) {
           <div>
             <strong>#${escapeHTML(hardest.level.rank)} — ${escapeHTML(hardest.level.name)}</strong>
             <span class="hardest-badge">HARDEST</span>
+            ${hardest.isVerification ? `<span class="verified-badge">VERIFIED</span>` : ""}
             <span class="pts-badge">+${hardest.points} pts</span>
           </div>
           ${
-            isEditor
+            isEditor && hardest.record
               ? `<button class="delete-btn" type="button" onclick="deleteRecord(${hardest.record.id})">Delete Record</button>`
               : ""
           }
@@ -1363,7 +1386,7 @@ function openPlayerProfileModal(playerName) {
         <div class="helper-note" style="margin-top:4px;margin-bottom:8px;">
           By ${escapeHTML(hardest.level.creator || "Unknown")} · ID: ${escapeHTML(hardest.level.level_id || "N/A")}
         </div>
-        ${renderVideoPreview(hardest.record.video_url)}
+        ${renderVideoPreview(hardest.videoUrl, hardest.customThumbUrl)}
       </div>
     `;
   }
@@ -1378,37 +1401,18 @@ function openPlayerProfileModal(playerName) {
           <div>
             <strong>#${escapeHTML(item.level.rank)} — ${escapeHTML(item.level.name)}</strong>
             ${idx === 0 ? `<span class="hardest-badge">HARDEST</span>` : ""}
+            ${item.isVerification ? `<span class="verified-badge">VERIFIED</span>` : ""}
             <span class="pts-badge">+${item.points} pts</span>
           </div>
           ${
-            isEditor
+            isEditor && item.record
               ? `<button class="delete-btn" type="button" onclick="deleteRecord(${item.record.id})">Delete Record</button>`
               : ""
           }
         </div>
-        ${renderVideoPreview(item.record.video_url)}
+        ${renderVideoPreview(item.videoUrl, item.customThumbUrl)}
       </div>
     `).join("");
-  }
-
-  const verSection = document.getElementById("playerVerifiedSection");
-  const verListEl = document.getElementById("playerVerifiedLevels");
-  if (entry.verifiedLevels.length > 0) {
-    verSection.classList.remove("hidden");
-    verListEl.innerHTML = entry.verifiedLevels.map(v => `
-      <div class="record-card">
-        <div class="record-card-header">
-          <div>
-            <strong>#${escapeHTML(v.level.rank)} — ${escapeHTML(v.level.name)}</strong>
-            <span class="pts-badge">+${v.points} verifier pts</span>
-          </div>
-        </div>
-        ${renderVideoPreview(v.level.video_url, v.level.custom_thumb_url)}
-      </div>
-    `).join("");
-  } else {
-    verSection.classList.add("hidden");
-    verListEl.innerHTML = "";
   }
 
   document.getElementById("playerProfileModal").classList.remove("hidden");
