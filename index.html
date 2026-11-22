@@ -911,7 +911,7 @@ footer {
         <input type="text" id="verifier" list="signedUpUsersList" placeholder="Search or type Verifier (gets level pts)" />
         <input type="text" id="level_id" placeholder="Level ID" />
         <input type="text" id="video_url" placeholder="Video Proof URL" />
-        <input type="text" id="custom_thumb_url" placeholder="Custom Thumbnail URL (Optional)" style="grid-column: span 2;" />
+        <input type="text" id="custom_thumb_url" placeholder="Custom Thumbnail URL (Direct .png/.jpg link)" style="grid-column: span 2;" />
       </div>
       <button class="primary-btn" onclick="addLevel()">Add Level</button>
       <div class="helper-note">
@@ -931,7 +931,7 @@ footer {
         <input type="text" id="subVerifier" placeholder="Verifier" />
         <input type="text" id="subLevelId" placeholder="Level ID" />
         <input type="text" id="subVideoUrl" placeholder="Verification Video URL" />
-        <input type="text" id="subCustomThumb" placeholder="Custom Thumbnail URL (Optional)" style="grid-column: span 2;" />
+        <input type="text" id="subCustomThumb" placeholder="Custom Thumbnail URL (Direct .png/.jpg link)" style="grid-column: span 2;" />
       </div>
       <input type="text" id="subAuthor" placeholder="Your Name / Handle (optional)" />
       <button class="primary-btn" type="button" onclick="submitLevelProposal()">Submit Level for Approval</button>
@@ -1059,7 +1059,7 @@ footer {
         <input type="text" id="editVerifier" list="signedUpUsersList" placeholder="Search or select Verifier" />
         <input type="text" id="editLevelId" placeholder="Level ID" />
         <input type="text" id="editVideoUrl" placeholder="Video Proof URL" />
-        <input type="text" id="editCustomThumb" placeholder="Custom Thumbnail URL (Optional)" style="grid-column: span 2;" />
+        <input type="text" id="editCustomThumb" placeholder="Custom Thumbnail URL (Direct .png/.jpg link)" style="grid-column: span 2;" />
       </div>
       <div class="helper-note">
         Changing the Verifier automatically transfers the level's verifier points and completion credit to that user.
@@ -1127,8 +1127,10 @@ function getPointsForRank(rank) {
 }
 
 function safeURL(value) {
+  const trimmed = String(value ?? "").trim();
+  if (!trimmed) return "";
   try {
-    const url = new URL(value);
+    const url = new URL(trimmed);
     if (url.protocol === "https:" || url.protocol === "http:") return url.href;
   } catch {
     return "";
@@ -1163,56 +1165,61 @@ function refreshSignedUpUsersList() {
 }
 
 function getVideoDetails(url, customThumbUrl = null) {
+  let ytThumb = null;
+  let embedUrl = null;
+  let isMedal = false;
+
+  if (url) {
+    try {
+      const parsed = new URL(String(url).trim());
+      const host = parsed.hostname.replace(/^www\./, "");
+
+      if (host === "youtu.be") {
+        const id = parsed.pathname.split("/")[1];
+        if (/^[a-zA-Z0-9_-]{11}$/.test(id || "")) {
+          ytThumb = `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+          embedUrl = `https://www.youtube.com/embed/${id}`;
+        }
+      } else if (host === "youtube.com" || host === "m.youtube.com" || host === "youtube-nocookie.com") {
+        const id =
+          parsed.searchParams.get("v") ||
+          parsed.pathname.match(/\/(?:embed|shorts)\/([a-zA-Z0-9_-]{11})/)?.[1];
+        if (/^[a-zA-Z0-9_-]{11}$/.test(id || "")) {
+          ytThumb = `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+          embedUrl = `https://www.youtube.com/embed/${id}`;
+        }
+      } else if (host === "medal.tv") {
+        const clipMatch = parsed.pathname.match(/\/clips\/([a-zA-Z0-9_-]+)/);
+        if (clipMatch && clipMatch[1]) {
+          isMedal = true;
+          embedUrl = `https://medal.tv/embed/clips/${encodeURIComponent(clipMatch[1])}`;
+        }
+      }
+    } catch {
+      // ignore invalid video URL
+    }
+  }
+
   const safeCustom = safeURL(customThumbUrl);
   if (safeCustom) {
-    return { type: "custom", thumbUrl: safeCustom, embedUrl: null };
+    return {
+      type: "custom",
+      thumbUrl: safeCustom,
+      fallbackThumbUrl: ytThumb,
+      embedUrl,
+      isMedal
+    };
   }
 
-  if (!url) return { type: null, thumbUrl: null, embedUrl: null };
-
-  try {
-    const parsed = new URL(url);
-    const host = parsed.hostname.replace(/^www\./, "");
-
-    if (host === "youtu.be") {
-      const id = parsed.pathname.split("/")[1];
-      if (/^[a-zA-Z0-9_-]{11}$/.test(id || "")) {
-        return {
-          type: "youtube",
-          thumbUrl: `https://img.youtube.com/vi/${id}/hqdefault.jpg`,
-          embedUrl: `https://www.youtube.com/embed/${id}`
-        };
-      }
-    }
-
-    if (host === "youtube.com" || host === "m.youtube.com" || host === "youtube-nocookie.com") {
-      const id =
-        parsed.searchParams.get("v") ||
-        parsed.pathname.match(/\/(?:embed|shorts)\/([a-zA-Z0-9_-]{11})/)?.[1];
-      if (/^[a-zA-Z0-9_-]{11}$/.test(id || "")) {
-        return {
-          type: "youtube",
-          thumbUrl: `https://img.youtube.com/vi/${id}/hqdefault.jpg`,
-          embedUrl: `https://www.youtube.com/embed/${id}`
-        };
-      }
-    }
-
-    if (host === "medal.tv") {
-      const clipMatch = parsed.pathname.match(/\/clips\/([a-zA-Z0-9_-]+)/);
-      if (clipMatch && clipMatch[1]) {
-        return {
-          type: "medal",
-          thumbUrl: null,
-          embedUrl: `https://medal.tv/embed/clips/${encodeURIComponent(clipMatch[1])}`
-        };
-      }
-    }
-  } catch {
-    return { type: null, thumbUrl: null, embedUrl: null };
+  if (ytThumb) {
+    return { type: "youtube", thumbUrl: ytThumb, fallbackThumbUrl: null, embedUrl, isMedal: false };
   }
 
-  return { type: null, thumbUrl: null, embedUrl: null };
+  if (isMedal) {
+    return { type: "medal", thumbUrl: null, fallbackThumbUrl: null, embedUrl, isMedal: true };
+  }
+
+  return { type: null, thumbUrl: null, fallbackThumbUrl: null, embedUrl: null, isMedal: false };
 }
 
 function renderVideoPreview(videoUrl, customThumbUrl = null) {
@@ -1692,7 +1699,7 @@ async function updateAuthUI() {
     closeEditModal();
   }
 
-  loadData();
+  await loadData();
 }
 
 async function logout() {
@@ -1762,10 +1769,13 @@ function renderLevels(levels) {
   }
 
   container.innerHTML = levels.map(lvl => {
-    const { type, thumbUrl } = getVideoDetails(lvl.video_url, lvl.custom_thumb_url);
+    const { thumbUrl, fallbackThumbUrl, isMedal } = getVideoDetails(lvl.video_url, lvl.custom_thumb_url);
     const proofURL = safeURL(lvl.video_url);
     const pts = getPointsForRank(lvl.rank);
     const recCount = countByLevel.get(String(lvl.id)) || 0;
+    const onErrorHandler = fallbackThumbUrl
+      ? `this.onerror=null;this.src='${escapeHTML(fallbackThumbUrl)}';`
+      : `this.onerror=null;this.style.opacity='0.35';`;
 
     return `
       <div class="level-row" data-rank="${escapeHTML(lvl.rank)}" data-open-level="${escapeHTML(lvl.id)}">
@@ -1774,8 +1784,8 @@ function renderLevels(levels) {
         <div>
           ${
             thumbUrl
-              ? `<img class="thumbnail" src="${thumbUrl}" alt="${escapeHTML(lvl.name)} thumbnail" loading="lazy" onerror="this.style.display='none'">`
-              : type === "medal"
+              ? `<img class="thumbnail" src="${escapeHTML(thumbUrl)}" alt="${escapeHTML(lvl.name)} thumbnail" loading="lazy" onerror="${onErrorHandler}">`
+              : isMedal
                 ? `<div class="thumbnail-placeholder" style="display:grid;place-items:center;color:#c1b0e5;font-size:10px;font-weight:700;letter-spacing:.6px;">MEDAL</div>`
                 : `<div class="thumbnail-placeholder"></div>`
           }
@@ -1906,7 +1916,7 @@ async function submitLevelProposal() {
       document.getElementById(id).value = "";
     });
     alert("Level submitted! Waiting for editor approval.");
-    if (isEditor) loadEditorQueues();
+    if (isEditor) await loadEditorQueues();
   }
 }
 
@@ -1936,7 +1946,7 @@ async function submitRecord() {
       document.getElementById("recPlayerName").value = "";
     }
     alert(`Record submitted under "${playerName}"! Waiting for editor approval.`);
-    if (isEditor) loadEditorQueues();
+    if (isEditor) await loadEditorQueues();
   }
 }
 
@@ -2026,15 +2036,33 @@ function renderEditorQueues() {
   }
 }
 
+async function fetchFreshLevels() {
+  const { data, error } = await sb.from("Levels").select("*").order("rank", { ascending: true });
+  if (error) return { levels: null, error };
+  allLevels = (data || []).sort((a, b) => Number(a.rank) - Number(b.rank));
+  return { levels: allLevels, error: null };
+}
+
 async function shiftRanksDownFrom(targetRank, excludeId = null) {
-  const levelsToPushDown = allLevels
-    .filter(lvl => (excludeId === null || String(lvl.id) !== String(excludeId)) && Number(lvl.rank) >= targetRank)
+  const { levels, error: fetchErr } = await fetchFreshLevels();
+  if (fetchErr) return fetchErr;
+
+  const levelsToPushDown = levels
+    .filter(lvl => (excludeId === null || String(lvl.id) !== String(excludeId)) && Number(lvl.rank) >= Number(targetRank))
     .sort((a, b) => Number(b.rank) - Number(a.rank));
 
   for (const lvl of levelsToPushDown) {
     const nextRank = Number(lvl.rank) + 1;
-    const { error } = await sb.from("Levels").update({ rank: nextRank }).eq("id", lvl.id);
+    const { data: updatedRows, error } = await sb
+      .from("Levels")
+      .update({ rank: nextRank })
+      .eq("id", lvl.id)
+      .select("id");
+
     if (error) return error;
+    if (!updatedRows || updatedRows.length === 0) {
+      return new Error(`Could not update rank for level "${lvl.name}". Check your Supabase RLS UPDATE policy on Levels.`);
+    }
     lvl.rank = nextRank;
   }
   return null;
@@ -2045,10 +2073,13 @@ async function approveLevelSubmission(subId) {
   const sub = pendingLevelSubs.find(s => String(s.id) === String(subId));
   if (!sub) return;
 
+  const { levels, error: fetchErr } = await fetchFreshLevels();
+  if (fetchErr) return alert("Could not load current levels: " + fetchErr.message);
+
   const rankInput = document.getElementById(`approveRank-${subId}`);
   const verifierInput = document.getElementById(`approveVerifier-${subId}`);
   const chosenRank = parseInt(rankInput?.value, 10);
-  const targetRank = Math.max(1, chosenRank || parseInt(sub.suggested_rank, 10) || (allLevels.length + 1));
+  const targetRank = Math.max(1, chosenRank || parseInt(sub.suggested_rank, 10) || (levels.length + 1));
   const chosenVerifier = (verifierInput?.value ?? sub.verifier ?? "").trim();
 
   const shiftErr = await shiftRanksDownFrom(targetRank);
@@ -2060,12 +2091,17 @@ async function approveLevelSubmission(subId) {
     creator: sub.creator || "",
     verifier: chosenVerifier,
     level_id: sub.level_id || "",
-    video_url: sub.video_url || "",
-    custom_thumb_url: sub.custom_thumb_url || ""
+    video_url: (sub.video_url || "").trim(),
+    custom_thumb_url: (sub.custom_thumb_url || "").trim()
   }]);
   if (insErr) return alert("Could not insert level: " + insErr.message);
 
-  await sb.from("LevelSubmissions").update({ status: "approved", verifier: chosenVerifier }).eq("id", subId);
+  const { error: subUpdErr } = await sb
+    .from("LevelSubmissions")
+    .update({ status: "approved", verifier: chosenVerifier })
+    .eq("id", subId);
+  if (subUpdErr) return alert("Level added, but could not mark submission approved: " + subUpdErr.message);
+
   await loadData();
 }
 
@@ -2146,30 +2182,49 @@ async function saveEditedLevel() {
     return alert("Valid Rank (1 or higher) and Level Name are required.");
   }
 
-  const currentLevel = allLevels.find(item => String(item.id) === String(id));
+  const { levels, error: fetchErr } = await fetchFreshLevels();
+  if (fetchErr) return alert("Could not load current levels: " + fetchErr.message);
+
+  const currentLevel = levels.find(item => String(item.id) === String(id));
   const oldRank = currentLevel ? Number(currentLevel.rank) : null;
 
   if (oldRank !== null && oldRank !== newRank) {
     if (newRank < oldRank) {
-      const toShiftDown = allLevels
+      const toShiftDown = levels
         .filter(item => String(item.id) !== String(id) && Number(item.rank) >= newRank && Number(item.rank) < oldRank)
         .sort((a, b) => Number(b.rank) - Number(a.rank));
 
       for (const item of toShiftDown) {
         const nextRank = Number(item.rank) + 1;
-        const { error: shiftErr } = await sb.from("Levels").update({ rank: nextRank }).eq("id", item.id);
+        const { data: updatedRows, error: shiftErr } = await sb
+          .from("Levels")
+          .update({ rank: nextRank })
+          .eq("id", item.id)
+          .select("id");
+
         if (shiftErr) return alert("Could not update rank order: " + shiftErr.message);
+        if (!updatedRows || updatedRows.length === 0) {
+          return alert(`Could not shift "${item.name}". Check your Supabase RLS UPDATE policy on Levels.`);
+        }
         item.rank = nextRank;
       }
     } else {
-      const toShiftUp = allLevels
+      const toShiftUp = levels
         .filter(item => String(item.id) !== String(id) && Number(item.rank) > oldRank && Number(item.rank) <= newRank)
         .sort((a, b) => Number(a.rank) - Number(b.rank));
 
       for (const item of toShiftUp) {
         const nextRank = Number(item.rank) - 1;
-        const { error: shiftErr } = await sb.from("Levels").update({ rank: nextRank }).eq("id", item.id);
+        const { data: updatedRows, error: shiftErr } = await sb
+          .from("Levels")
+          .update({ rank: nextRank })
+          .eq("id", item.id)
+          .select("id");
+
         if (shiftErr) return alert("Could not update rank order: " + shiftErr.message);
+        if (!updatedRows || updatedRows.length === 0) {
+          return alert(`Could not shift "${item.name}". Check your Supabase RLS UPDATE policy on Levels.`);
+        }
         item.rank = nextRank;
       }
     }
@@ -2185,9 +2240,16 @@ async function saveEditedLevel() {
     custom_thumb_url: document.getElementById("editCustomThumb").value.trim()
   };
 
-  const { error } = await sb.from("Levels").update(updatedPayload).eq("id", id);
+  const { data: savedRows, error } = await sb
+    .from("Levels")
+    .update(updatedPayload)
+    .eq("id", id)
+    .select("id");
+
   if (error) {
     alert("Could not save edits: " + error.message);
+  } else if (!savedRows || savedRows.length === 0) {
+    alert("Could not save edits: 0 rows updated. Check your Supabase RLS UPDATE policy on Levels.");
   } else {
     closeEditModal();
     await loadData();
