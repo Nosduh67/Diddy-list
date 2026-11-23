@@ -382,6 +382,20 @@ header {
   background: #244030;
 }
 
+.transfer-btn {
+  padding: 5px 8px;
+  color: #98c8eb;
+  background: #18232c;
+  border: 1px solid #2f4a5e;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 10px;
+}
+
+.transfer-btn:hover {
+  background: #213240;
+}
+
 .delete-btn {
   padding: 5px 8px;
   color: #e58a8a;
@@ -1207,6 +1221,33 @@ footer {
   </div>
 </div>
 
+<!-- TRANSFER RECORD MODAL -->
+<div class="modal-backdrop hidden" id="transferRecordModal">
+  <div class="modal-card">
+    <h3>Move Record to Another Player</h3>
+    <p style="color:#a5a5ae;font-size:12px;margin:0 0 12px;" id="transferRecordDetails"></p>
+    <input type="hidden" id="transferRecordId" />
+
+    <label style="font-size:11px;color:#a5a5ae;text-transform:uppercase;letter-spacing:.7px;display:block;margin-bottom:4px;">
+      Target Player Username / Nickname *
+    </label>
+    <input
+      type="text"
+      id="targetPlayerNicknameInput"
+      list="signedUpUsersList"
+      placeholder="Type or select new account username..."
+    />
+    <div class="helper-note">
+      This will transfer the completion credit, proof video, and leaderboard points of this record to the selected account.
+    </div>
+
+    <div class="modal-actions">
+      <button class="secondary-btn" type="button" onclick="closeTransferModal()">Cancel</button>
+      <button class="primary-btn" type="button" onclick="executeRecordTransfer()">Transfer Record</button>
+    </div>
+  </div>
+</div>
+
 <!-- EDIT LEVEL MODAL -->
 <div class="modal-backdrop hidden" id="editModal">
   <div class="modal-card">
@@ -1291,6 +1332,15 @@ function safeURL(value) {
     return "";
   }
   return "";
+}
+
+function isNicknameTaken(nickname, excludeUserId = null) {
+  const clean = String(nickname ?? "").trim().toLowerCase();
+  if (!clean) return false;
+  return signedUpUsers.some(p => {
+    if (excludeUserId && String(p.id) === String(excludeUserId)) return false;
+    return String(p.nickname ?? "").trim().toLowerCase() === clean;
+  });
 }
 
 function refreshSignedUpUsersList() {
@@ -1548,11 +1598,14 @@ function renderSplitPlayerDetail(paneId, playerName, lbPlacement = null) {
             ${hardest.isVerification ? `<span class="verified-badge">VERIFIED</span>` : ""}
             <span class="pts-badge">+${hardest.points} pts</span>
           </div>
-          ${
-            isEditor && hardest.record
-              ? `<button class="delete-btn" type="button" onclick="deleteRecord(${hardest.record.id})">Delete Record</button>`
-              : ""
-          }
+          <div style="display:flex;gap:6px;">
+            ${
+              isEditor && hardest.record
+                ? `<button class="transfer-btn" type="button" onclick="openTransferModal(${hardest.record.id}, '${escapeHTML(entry.player.replace(/'/g, "\\'"))}', '${escapeHTML(hardest.level.name.replace(/'/g, "\\'"))}')">Move Record</button>
+                   <button class="delete-btn" type="button" onclick="deleteRecord(${hardest.record.id})">Delete Record</button>`
+                : ""
+            }
+          </div>
         </div>
         <div class="helper-note" style="margin-top:4px;margin-bottom:8px;">
           By ${escapeHTML(hardest.level.creator || "Unknown")} · ID: ${escapeHTML(hardest.level.level_id || "N/A")}
@@ -1598,7 +1651,7 @@ function renderSplitPlayerDetail(paneId, playerName, lbPlacement = null) {
   `;
 }
 
-/* LEVEL RECORDS MODAL */
+/* LEVEL RECORDS MODAL & TRANSFER */
 
 function openLevelRecordsModal(levelId) {
   const level = allLevels.find(l => String(l.id) === String(levelId));
@@ -1635,11 +1688,14 @@ function openLevelRecordsModal(levelId) {
             <strong>#${idx + 1} ${escapeHTML(rec.player_name)}</strong>
             <span class="pts-badge">+${pts} pts</span>
           </div>
-          ${
-            isEditor
-              ? `<button class="delete-btn" type="button" onclick="deleteRecord(${rec.id})">Delete Record</button>`
-              : ""
-          }
+          <div style="display:flex;gap:6px;">
+            ${
+              isEditor
+                ? `<button class="transfer-btn" type="button" onclick="openTransferModal(${rec.id}, '${escapeHTML(rec.player_name.replace(/'/g, "\\'"))}', '${escapeHTML(level.name.replace(/'/g, "\\'"))}')">Move Record</button>
+                   <button class="delete-btn" type="button" onclick="deleteRecord(${rec.id})">Delete Record</button>`
+                : ""
+            }
+          </div>
         </div>
         ${renderVideoPreview(rec.video_url)}
       </div>
@@ -1652,6 +1708,48 @@ function openLevelRecordsModal(levelId) {
 function closeLevelRecordsModal() {
   activeModalLevelId = null;
   document.getElementById("levelRecordsModal").classList.add("hidden");
+}
+
+function openTransferModal(recordId, currentHolder, levelName) {
+  if (!isEditor) return alert("Access denied: Editor status required.");
+  refreshSignedUpUsersList();
+  document.getElementById("transferRecordId").value = recordId;
+  document.getElementById("transferRecordDetails").textContent =
+    `Move completion record of "${levelName}" from "${currentHolder}" to a new account:`;
+  document.getElementById("targetPlayerNicknameInput").value = "";
+  document.getElementById("transferRecordModal").classList.remove("hidden");
+}
+
+function closeTransferModal() {
+  document.getElementById("transferRecordId").value = "";
+  document.getElementById("transferRecordModal").classList.add("hidden");
+}
+
+async function executeRecordTransfer() {
+  if (!isEditor) return alert("Access denied: Editor status required.");
+
+  const recordId = document.getElementById("transferRecordId").value;
+  const targetNickname = document.getElementById("targetPlayerNicknameInput").value.trim();
+
+  if (!recordId || !targetNickname) {
+    return alert("Please enter or select a target username/nickname.");
+  }
+
+  const { error } = await sb
+    .from("Records")
+    .update({ player_name: targetNickname })
+    .eq("id", recordId);
+
+  if (error) {
+    return alert("Could not transfer record: " + error.message);
+  }
+
+  closeTransferModal();
+  await loadData();
+  if (activeModalLevelId !== null) {
+    openLevelRecordsModal(activeModalLevelId);
+  }
+  alert(`Record transferred successfully to "${targetNickname}"!`);
 }
 
 async function deleteRecord(recordId) {
@@ -1669,7 +1767,7 @@ async function deleteRecord(recordId) {
   }
 }
 
-/* AUTH & NICKNAME ACCOUNT CREATION */
+/* AUTH & UNIQUE NICKNAME ACCOUNT CREATION */
 
 function toggleAuthMode() {
   isSignUpMode = !isSignUpMode;
@@ -1715,6 +1813,10 @@ async function handleAuthSubmit() {
   if (isSignUpMode) {
     if (!nickname) {
       return alert("Please enter a nickname for your account.");
+    }
+
+    if (isNicknameTaken(nickname)) {
+      return alert(`The nickname "${nickname}" is already taken by another account. Please choose a unique name.`);
     }
 
     const { data, error } = await sb.auth.signUp({
@@ -1782,6 +1884,10 @@ async function saveNewNickname() {
 
   if (!newNickname) {
     return alert("Please enter a valid nickname.");
+  }
+
+  if (isNicknameTaken(newNickname, currentUser.id)) {
+    return alert(`The nickname "${newNickname}" is already taken by another account. Please choose a unique name.`);
   }
 
   const oldNickname = currentNickname;
@@ -1864,7 +1970,7 @@ async function loadData() {
   const [{ data: levels, error: lvlErr }, { data: recs, error: recErr }, { data: profiles }] = await Promise.all([
     sb.from("Levels").select("*").order("rank", { ascending: true }),
     sb.from("Records").select("*"),
-    sb.from("Profiles").select("nickname")
+    sb.from("Profiles").select("id, nickname")
   ]);
 
   if (lvlErr) {
