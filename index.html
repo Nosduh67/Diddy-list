@@ -237,7 +237,7 @@ header {
   color: #c99470;
 }
 
-/* THUMBNAIL */
+/* THUMBNAIL & MEDAL LOGO */
 
 .thumbnail {
   display: block;
@@ -255,6 +255,63 @@ header {
   background: #15171d;
   border: 1px solid #30333b;
   border-radius: 4px;
+}
+
+.medal-thumb-box {
+  width: 176px;
+  height: 99px;
+  background: #121215;
+  border: 1px solid #383a44;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.medal-logo-svg {
+  width: 46px;
+  height: 30px;
+  display: block;
+}
+
+.medal-thumb-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .9px;
+  color: #e5e6ec;
+  text-transform: uppercase;
+}
+
+.medal-preview-card {
+  width: 100%;
+  max-width: 480px;
+  background: #121215;
+  border: 1px solid #30333b;
+  border-radius: 4px;
+  padding: 18px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.medal-preview-card .medal-logo-svg {
+  width: 58px;
+  height: 38px;
+  flex-shrink: 0;
+}
+
+.medal-preview-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.medal-preview-sub {
+  font-size: 11px;
+  color: #999ca7;
+  margin-top: 3px;
 }
 
 /* LEVEL INFORMATION */
@@ -965,9 +1022,15 @@ footer {
   }
 
   .thumbnail,
-  .thumbnail-placeholder {
+  .thumbnail-placeholder,
+  .medal-thumb-box {
     width: 116px;
     height: 65px;
+  }
+
+  .medal-logo-svg {
+    width: 34px;
+    height: 22px;
   }
 
   .rank {
@@ -1293,6 +1356,14 @@ const SUPABASE_KEY = "sb_publishable_0Byo8YMjM5x75UTZszUFrA_eDNew7hA";
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+const MEDAL_LOGO_SVG = `
+  <svg class="medal-logo-svg" viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M12 24C12 20.5 14 17.5 17 15.8L29.5 8.8C32.7 7 36.7 7.1 39.8 9L60 21.2L80.2 9C83.3 7.1 87.3 7 90.5 8.8L103 15.8C106 17.5 108 20.5 108 24V56C108 59.4 106.1 62.5 103.2 64.2L97.5 67.5C93.5 69.8 88.5 67 88.5 62.3V33.6L64.6 48C61.8 49.7 58.2 49.7 55.4 48L31.5 33.6V62.3C31.5 67 26.5 69.8 22.5 67.5L16.8 64.2C13.9 62.5 12 59.4 12 56V24Z" fill="#FFFFFF"/>
+    <path d="M40.5 46.8C40.5 43.2 44.4 40.9 47.5 42.8L55.2 47.5C58.4 49.5 58.4 54.1 55.2 56.1L47.5 60.8C44.4 62.7 40.5 60.4 40.5 56.8V46.8Z" fill="#FFFFFF"/>
+    <path d="M79.5 46.8C79.5 43.2 75.6 40.9 72.5 42.8L64.8 47.5C61.6 49.5 61.6 54.1 64.8 56.1L72.5 60.8C75.6 62.7 79.5 60.4 79.5 56.8V46.8Z" fill="#FFFFFF"/>
+  </svg>
+`;
+
 let currentUser = null;
 let currentNickname = "";
 let isEditor = false;
@@ -1393,12 +1464,8 @@ function getVideoDetails(url, customThumbUrl = null) {
           ytThumb = `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
           embedUrl = `https://www.youtube.com/embed/${id}`;
         }
-      } else if (host === "medal.tv") {
-        const clipMatch = parsed.pathname.match(/\/clips\/([a-zA-Z0-9_-]+)/);
-        if (clipMatch && clipMatch[1]) {
-          isMedal = true;
-          embedUrl = `https://medal.tv/embed/clips/${encodeURIComponent(clipMatch[1])}`;
-        }
+      } else if (host === "medal.tv" || host.endsWith(".medal.tv")) {
+        isMedal = true;
       }
     } catch {
       // ignore invalid video URL
@@ -1421,7 +1488,7 @@ function getVideoDetails(url, customThumbUrl = null) {
   }
 
   if (isMedal) {
-    return { type: "medal", thumbUrl: null, fallbackThumbUrl: null, embedUrl, isMedal: true };
+    return { type: "medal", thumbUrl: null, fallbackThumbUrl: null, embedUrl: null, isMedal: true };
   }
 
   return { type: null, thumbUrl: null, fallbackThumbUrl: null, embedUrl: null, isMedal: false };
@@ -1433,7 +1500,23 @@ function renderVideoPreview(videoUrl, customThumbUrl = null) {
     return `<div class="helper-note">No video link provided.</div>`;
   }
 
-  const { embedUrl } = getVideoDetails(safeProof, customThumbUrl);
+  const { embedUrl, isMedal } = getVideoDetails(safeProof, customThumbUrl);
+
+  if (isMedal) {
+    return `
+      <div class="medal-preview-card">
+        ${MEDAL_LOGO_SVG}
+        <div>
+          <div class="medal-preview-title">Medal Clip Proof</div>
+          <div class="medal-preview-sub">Medal blocks embedded frames on external sites — open directly to watch.</div>
+        </div>
+      </div>
+      <div style="margin-top:6px;">
+        <a class="proof-link" href="${escapeHTML(safeProof)}" target="_blank" rel="noopener noreferrer">Open Medal Clip ↗</a>
+      </div>
+    `;
+  }
+
   return `
     ${
       embedUrl
@@ -2046,7 +2129,7 @@ function renderLevels(levels) {
             thumbUrl
               ? `<img class="thumbnail" src="${escapeHTML(thumbUrl)}" alt="${escapeHTML(lvl.name)} thumbnail" loading="lazy" onerror="${onErrorHandler}">`
               : isMedal
-                ? `<div class="thumbnail-placeholder" style="display:grid;place-items:center;color:#c1b0e5;font-size:11px;font-weight:700;letter-spacing:.6px;">MEDAL</div>`
+                ? `<div class="medal-thumb-box">${MEDAL_LOGO_SVG}<span class="medal-thumb-label">MEDAL</span></div>`
                 : `<div class="thumbnail-placeholder"></div>`
           }
         </div>
