@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -84,25 +85,13 @@ header {
 .header-nav {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 22px;
   font-size: 12px;
   font-weight: 700;
 }
 
-.nav-btn {
-  background: transparent;
-  border: 1px solid transparent;
+.header-nav span {
   color: #c1b0e5;
-  padding: 6px 12px;
-  border-radius: 4px;
-  transition: background .12s, border-color .12s, color .12s;
-}
-
-.nav-btn:hover,
-.nav-btn.active {
-  background: #252230;
-  border-color: #4d3f69;
-  color: #fff;
 }
 
 .header-status {
@@ -328,74 +317,6 @@ header {
   background: #402729;
 }
 
-/* NOTIFICATIONS */
-
-.notif-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.notif-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  padding: 15px 17px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.notif-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.notif-title {
-  font-size: 15px;
-  font-weight: 750;
-  color: #ffffff;
-}
-
-.notif-date {
-  font-size: 11px;
-  color: var(--muted);
-}
-
-.notif-ranks {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 2px;
-}
-
-.rank-pill {
-  padding: 5px 10px;
-  border-radius: 3px;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.rank-pill.suggested {
-  background: #15171d;
-  border: 1px solid #383b46;
-  color: #b4b8c6;
-}
-
-.rank-pill.placed {
-  background: #252230;
-  border: 1px solid #52426d;
-  color: #d4c4f7;
-}
-
-.notif-arrow {
-  color: var(--muted);
-  font-weight: 700;
-}
-
 /* EMPTY / LOADING */
 
 .empty {
@@ -404,8 +325,6 @@ header {
   color: var(--muted);
   text-align: center;
   font-size: 13px;
-  border: 1px solid var(--border);
-  border-radius: 5px;
 }
 
 /* LOGIN */
@@ -609,12 +528,8 @@ footer {
   }
 
   .header-nav {
-    gap: 6px;
+    gap: 8px;
     font-size: 10px;
-  }
-
-  .nav-btn {
-    padding: 5px 8px;
   }
 
   .page-heading {
@@ -720,8 +635,7 @@ footer {
     </div>
 
     <div class="header-nav">
-      <button class="nav-btn active" type="button" id="tabListBtn" onclick="switchTab('list')">CHALLENGE LIST</button>
-      <button class="nav-btn" type="button" id="tabNotifBtn" onclick="switchTab('notifications')">NOTIFICATIONS</button>
+      <span>CHALLENGE LIST</span>
     </div>
   </div>
 </header>
@@ -729,114 +643,96 @@ footer {
 <div class="container">
 
   <div class="page-heading">
-    <h1 id="pageTitle">Diddy List</h1>
-    <p id="pageSubtitle">The official Diddy List challenge rankings.</p>
+    <h1>Diddy List</h1>
+    <p>The official Diddy List challenge rankings.</p>
   </div>
 
-  <!-- CHALLENGE LIST TAB -->
-  <div id="listTab">
+  <!-- EDITOR LOGIN -->
 
-    <!-- EDITOR LOGIN -->
+  <div class="panel login-panel" id="loginPanel">
+    <h3>Editor Login</h3>
 
-    <div class="panel login-panel" id="loginPanel">
-      <h3>Editor Login</h3>
+    <input
+      type="email"
+      id="loginEmail"
+      placeholder="Editor Email"
+    />
 
-      <input
-        type="email"
-        id="loginEmail"
-        placeholder="Editor Email"
-      />
+    <input
+      type="password"
+      id="loginPassword"
+      placeholder="Password"
+    />
 
-      <input
-        type="password"
-        id="loginPassword"
-        placeholder="Password"
-      />
+    <button class="primary-btn" onclick="login()">
+      Log In
+    </button>
+  </div>
 
-      <button class="primary-btn" onclick="login()">
-        Log In
+  <!-- EDITOR CONTROLS -->
+
+  <div class="editor-panel hidden" id="editorPanel">
+
+    <div class="editor-header">
+      <div>
+        <h3>
+          Add Level
+          <span class="editor-email" id="editorEmail"></span>
+        </h3>
+      </div>
+
+      <button class="secondary-btn" onclick="logout()">
+        Log Out
       </button>
     </div>
 
-    <!-- EDITOR CONTROLS -->
-
-    <div class="editor-panel hidden" id="editorPanel">
-
-      <div class="editor-header">
-        <div>
-          <h3>
-            Add Level
-            <span class="editor-email" id="editorEmail"></span>
-          </h3>
-        </div>
-
-        <button class="secondary-btn" onclick="logout()">
-          Log Out
-        </button>
-      </div>
-
-      <div class="editor-section">
-        <h4>Quick Level Templates (5)</h4>
-        <div class="template-list" id="templateList"></div>
-      </div>
-
-      <div class="editor-section">
-        <h4>Level Details</h4>
-
-        <div class="form-grid">
-          <input type="number" id="suggested_rank" placeholder="Suggested Rank (e.g. 1)" />
-          <input type="number" id="rank" placeholder="Placed Rank (e.g. 1)" />
-          <input type="text" id="name" placeholder="Level Name" />
-          <input type="text" id="creator" placeholder="Creator" />
-          <input type="text" id="verifier" placeholder="Verifier" />
-          <input type="text" id="level_id" placeholder="Level ID" />
-          <input type="text" id="video_url" placeholder="Video Proof URL" style="grid-column: span 2;" />
-        </div>
-
-        <button class="primary-btn add-btn" onclick="addLevel()">
-          Add Level &amp; Post Notification
-        </button>
-      </div>
-
+    <div class="editor-section">
+      <h4>Quick Level Templates (5)</h4>
+      <div class="template-list" id="templateList"></div>
     </div>
 
-    <!-- PUBLIC LIST -->
+    <div class="editor-section">
+      <h4>Level Details</h4>
 
-    <div class="list-toolbar">
-      <h2>Challenge Rankings</h2>
+      <div class="form-grid">
+        <input type="number" id="rank" placeholder="Rank (e.g. 1)" />
+        <input type="text" id="name" placeholder="Level Name" />
+        <input type="text" id="creator" placeholder="Creator" />
+        <input type="text" id="verifier" placeholder="Verifier" />
+        <input type="text" id="level_id" placeholder="Level ID" />
+        <input type="text" id="video_url" placeholder="Video Proof URL" />
+      </div>
 
-      <input
-        type="text"
-        class="search-box"
-        id="searchInput"
-        placeholder="Search levels..."
-        oninput="filterLevels()"
-      />
-    </div>
-
-    <div class="column-headings">
-      <div>Rank</div>
-      <div>Level</div>
-      <div>Information</div>
-      <div style="text-align:right;">Proof</div>
-    </div>
-
-    <div class="level-list" id="list">
-      <div class="empty">Loading levels...</div>
+      <button class="primary-btn add-btn" onclick="addLevel()">
+        Add Level
+      </button>
     </div>
 
   </div>
 
-  <!-- NOTIFICATIONS TAB -->
-  <div id="notificationsTab" class="hidden">
-    <div class="list-toolbar">
-      <h2>Level Placement Notifications</h2>
-      <span class="list-count" id="notifCount">0 updates</span>
-    </div>
+  <!-- PUBLIC LIST -->
 
-    <div class="notif-list" id="notificationsList">
-      <div class="empty">Loading notifications...</div>
-    </div>
+  <div class="list-toolbar">
+    <h2>Challenge Rankings</h2>
+
+    <input
+      type="text"
+      class="search-box"
+      id="searchInput"
+      placeholder="Search levels..."
+      oninput="filterLevels()"
+    />
+  </div>
+
+  <div class="column-headings">
+    <div>Rank</div>
+    <div>Level</div>
+    <div>Information</div>
+    <div style="text-align:right;">Proof</div>
+  </div>
+
+  <div class="level-list" id="list">
+    <div class="empty">Loading levels...</div>
   </div>
 
   <footer>
@@ -858,7 +754,6 @@ const sb = supabase.createClient(
 
 const LEVEL_TEMPLATES = [
   {
-    suggested_rank: 1,
     rank: 1,
     name: "Neon Overdrive",
     creator: "SampleCreator1",
@@ -867,7 +762,6 @@ const LEVEL_TEMPLATES = [
     video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
   },
   {
-    suggested_rank: 2,
     rank: 2,
     name: "Chronos Wave",
     creator: "SampleCreator2",
@@ -876,7 +770,6 @@ const LEVEL_TEMPLATES = [
     video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
   },
   {
-    suggested_rank: 3,
     rank: 3,
     name: "Static Pulse",
     creator: "SampleCreator3",
@@ -885,7 +778,6 @@ const LEVEL_TEMPLATES = [
     video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
   },
   {
-    suggested_rank: 4,
     rank: 4,
     name: "Vortex Corridor",
     creator: "SampleCreator4",
@@ -894,7 +786,6 @@ const LEVEL_TEMPLATES = [
     video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
   },
   {
-    suggested_rank: 5,
     rank: 5,
     name: "Eclipse Circuit",
     creator: "SampleCreator5",
@@ -908,35 +799,6 @@ const LEVEL_TEMPLATES = [
 
 let currentUser = null;
 let allLevels = [];
-let allNotifications = [];
-
-/* TAB SWITCHING */
-
-function switchTab(tabName) {
-  const listTab = document.getElementById("listTab");
-  const notifTab = document.getElementById("notificationsTab");
-  const tabListBtn = document.getElementById("tabListBtn");
-  const tabNotifBtn = document.getElementById("tabNotifBtn");
-  const pageTitle = document.getElementById("pageTitle");
-  const pageSubtitle = document.getElementById("pageSubtitle");
-
-  if (tabName === "notifications") {
-    listTab.classList.add("hidden");
-    notifTab.classList.remove("hidden");
-    tabListBtn.classList.remove("active");
-    tabNotifBtn.classList.add("active");
-    pageTitle.textContent = "Placement Notifications";
-    pageSubtitle.textContent = "See where submitted levels were suggested vs. where they were placed.";
-    renderNotifications();
-  } else {
-    notifTab.classList.add("hidden");
-    listTab.classList.remove("hidden");
-    tabNotifBtn.classList.remove("active");
-    tabListBtn.classList.add("active");
-    pageTitle.textContent = "Diddy List";
-    pageSubtitle.textContent = "The official Diddy List challenge rankings.";
-  }
-}
 
 /* HTML ESCAPING */
 
@@ -1032,7 +894,6 @@ function applyTemplate(idx) {
 
   if (!tpl) return;
 
-  document.getElementById("suggested_rank").value = tpl.suggested_rank ?? tpl.rank;
   document.getElementById("rank").value = tpl.rank;
   document.getElementById("name").value = tpl.name;
   document.getElementById("creator").value = tpl.creator;
@@ -1058,7 +919,6 @@ function updateAuthUI() {
   }
 
   loadLevels();
-  loadNotifications();
 }
 
 async function login() {
@@ -1105,65 +965,6 @@ async function loadLevels() {
   allLevels = levels || [];
 
   filterLevels();
-}
-
-/* LOAD & RENDER NOTIFICATIONS */
-
-async function loadNotifications() {
-  const { data, error } = await sb
-    .from("Notifications")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (!error && Array.isArray(data)) {
-    allNotifications = data;
-  }
-
-  renderNotifications();
-}
-
-function renderNotifications() {
-  const container = document.getElementById("notificationsList");
-  const countEl = document.getElementById("notifCount");
-
-  countEl.textContent = `${allNotifications.length} update${allNotifications.length === 1 ? "" : "s"}`;
-
-  if (!allNotifications.length) {
-    container.innerHTML = `
-      <div class="empty">
-        No placement notifications yet.
-      </div>
-    `;
-    return;
-  }
-
-  container.innerHTML = allNotifications.map(item => {
-    const dateText = item.created_at
-      ? new Date(item.created_at).toLocaleString()
-      : "Recently";
-
-    return `
-      <div class="notif-card">
-        <div class="notif-top">
-          <div class="notif-title">${escapeHTML(item.level_name)}</div>
-          <div class="notif-date">${escapeHTML(dateText)}</div>
-        </div>
-
-        <div class="notif-ranks">
-          <span class="rank-pill suggested">Suggested #${escapeHTML(item.suggested_rank)}</span>
-          <span class="notif-arrow">→</span>
-          <span class="rank-pill placed">Placed #${escapeHTML(item.placed_rank)}</span>
-        </div>
-
-        <div class="level-meta">
-          By ${escapeHTML(item.creator || "Unknown")}
-          &nbsp;·&nbsp;
-          Verified by ${escapeHTML(item.verifier || "Unknown")}
-          ${item.level_id ? `&nbsp;·&nbsp; <span class="level-id">ID: ${escapeHTML(item.level_id)}</span>` : ""}
-        </div>
-      </div>
-    `;
-  }).join("");
 }
 
 /* SEARCH */
@@ -1329,26 +1130,18 @@ async function addLevel() {
     return alert("Log in as an editor first.");
   }
 
-  const placedRank = parseInt(document.getElementById("rank").value, 10);
-  const suggestedRank = parseInt(document.getElementById("suggested_rank").value, 10) || placedRank;
-  const name = document.getElementById("name").value.trim();
-  const creator = document.getElementById("creator").value.trim();
-  const verifier = document.getElementById("verifier").value.trim();
-  const levelId = document.getElementById("level_id").value.trim();
-  const videoUrl = document.getElementById("video_url").value.trim();
-
-  if (!placedRank || !name) {
-    return alert("Placed Rank and Level Name are required.");
-  }
-
   const payload = {
-    rank: placedRank,
-    name,
-    creator,
-    verifier,
-    level_id: levelId,
-    video_url: videoUrl
+    rank: parseInt(document.getElementById("rank").value, 10),
+    name: document.getElementById("name").value.trim(),
+    creator: document.getElementById("creator").value.trim(),
+    verifier: document.getElementById("verifier").value.trim(),
+    level_id: document.getElementById("level_id").value.trim(),
+    video_url: document.getElementById("video_url").value.trim()
   };
+
+  if (!payload.rank || !payload.name) {
+    return alert("Rank and Level Name are required.");
+  }
 
   const { error } = await sb
     .from("Levels")
@@ -1357,26 +1150,7 @@ async function addLevel() {
   if (error) {
     alert("Could not add level: " + error.message);
   } else {
-    const notifEntry = {
-      level_name: name,
-      suggested_rank: suggestedRank,
-      placed_rank: placedRank,
-      creator,
-      verifier,
-      level_id: levelId,
-      created_at: new Date().toISOString()
-    };
-
-    const { error: notifErr } = await sb
-      .from("Notifications")
-      .insert([notifEntry]);
-
-    if (notifErr) {
-      allNotifications.unshift(notifEntry);
-    }
-
     [
-      "suggested_rank",
       "rank",
       "name",
       "creator",
@@ -1388,7 +1162,6 @@ async function addLevel() {
     });
 
     loadLevels();
-    loadNotifications();
   }
 }
 
@@ -1405,6 +1178,7 @@ sb.auth.getSession().then(({ data }) => {
   currentUser = data.session?.user ?? null;
   updateAuthUI();
 });
+
 </script>
 </body>
 </html>
