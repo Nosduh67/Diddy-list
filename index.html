@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,619 +7,412 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
 :root {
-  --background: #111216;
-  --header: #181a20;
-  --surface: #1b1d23;
-  --surface-hover: #22252d;
-  --border: #30333b;
-  --text: #e7e7eb;
-  --muted: #999ca7;
-  --accent: #a88be0;
-  --accent-hover: #c0a5f5;
-  --danger: #df6868;
+  --background: #0b0d12;
+  --header: #0f1218;
+  --surface: #141821;
+  --surface-hover: #1b2030;
+  --border: #252b38;
+  --text: #f1f1f4;
+  --muted: #8d8d99;
+  --accent: #3b82f6;
+  --accent-hover: #60a5fa;
+  --danger: #ff5c5c;
+  --success: #4fd18b;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
   background: var(--background);
+  background-image: radial-gradient(ellipse at 50% -10%, rgba(59,130,246,.07), transparent 55%);
+  background-attachment: fixed;
   color: var(--text);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Poppins', Arial, Helvetica, sans-serif;
   font-size: 14px;
 }
 
-button, input {
-  font: inherit;
-}
+button, input, select { font: inherit; }
 
-.container {
-  max-width: 1050px;
-  margin: 0 auto;
-  padding: 0 22px 50px;
-}
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #34343d; border-radius: 6px; }
+
+.container { max-width: 1100px; margin: 0 auto; padding: 0 22px 50px; }
 
 /* HEADER */
-
 header {
-  height: 65px;
-  background: var(--header);
+  height: 64px;
+  background: rgba(14,14,17,.92);
+  backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
-
 .header-inner {
-  max-width: 1050px;
-  height: 100%;
-  margin: auto;
-  padding: 0 22px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  max-width: 1280px; height: 100%; margin: auto; padding: 0 22px;
+  display: flex; align-items: center; justify-content: space-between;
 }
-
 .logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 19px;
-  font-weight: 800;
-  letter-spacing: .3px;
-  color: white;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 20px; font-weight: 700; letter-spacing: .2px; color: #fff;
 }
-
 .logo-mark {
-  width: 30px;
-  height: 30px;
-  background: #8065b7;
-  border-radius: 4px;
-  display: grid;
-  place-items: center;
-  font-size: 17px;
-  color: white;
+  width: 32px; height: 32px; background: var(--accent); border-radius: 8px;
+  display: grid; place-items: center; font-size: 17px; font-weight: 700; color: #fff;
 }
-
-.header-nav {
-  display: flex;
-  align-items: center;
-  gap: 22px;
-  font-size: 12px;
-  font-weight: 700;
+.header-nav { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; }
+.nav-btn {
+  background: transparent; border: none; color: var(--muted);
+  padding: 9px 16px; border-radius: 8px; letter-spacing: .6px;
+  transition: background .15s, color .15s;
 }
-
-.header-nav span {
-  color: #c1b0e5;
-}
-
-.header-status {
-  color: var(--muted);
-  font-size: 11px;
-}
+.nav-btn:hover { color: #fff; background: #1a1a1f; }
+.nav-btn.active { background: var(--accent); color: #fff; }
 
 /* PAGE TITLE */
+.page-heading { padding: 34px 0 18px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+.page-heading h1 { font-size: 30px; margin: 0; font-weight: 700; letter-spacing: -.5px; }
+.page-heading p { color: var(--muted); margin: 8px 0 0; font-size: 13px; }
 
-.page-heading {
-  padding: 35px 0 23px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 25px;
-}
-
-.page-heading h1 {
-  font-size: 27px;
-  margin: 0;
-  font-weight: 750;
-  letter-spacing: -.5px;
-}
-
-.page-heading p {
-  color: var(--muted);
-  margin: 8px 0 0;
-  font-size: 13px;
-}
-
-/* LIST TOOLBAR */
-
-.list-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 15px;
-  margin-bottom: 13px;
-}
-
-.list-toolbar h2 {
-  margin: 0;
-  font-size: 17px;
-  font-weight: 750;
-}
-
-.list-count {
-  color: var(--muted);
-  font-size: 11px;
-}
-
+/* TOOLBAR */
+.list-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 14px; }
+.list-toolbar h2 { margin: 0; font-size: 18px; font-weight: 700; outline: none; }
 .search-box {
-  width: 245px;
-  height: 34px;
-  padding: 0 10px;
-  border: 1px solid var(--border);
-  background: #181a20;
-  border-radius: 4px;
-  outline: none;
-  color: white;
-  font-size: 12px;
+  width: 260px; height: 38px; padding: 0 14px;
+  border: 1px solid var(--border); background: #131317;
+  border-radius: 8px; outline: none; color: #fff; font-size: 12px;
+  transition: border-color .15s;
 }
-
-.search-box:focus {
-  border-color: #8973b5;
-}
-
-.search-box::placeholder {
-  color: #777b86;
-}
+.search-box:focus { border-color: var(--accent); }
+.search-box::placeholder { color: #6c6c78; }
 
 /* COLUMN HEADINGS */
-
 .column-headings {
   display: grid;
-  grid-template-columns: 55px 116px minmax(0, 1fr) 105px;
-  align-items: center;
-  gap: 13px;
-  padding: 10px 13px;
-  background: #191b21;
-  border: 1px solid var(--border);
-  border-bottom: none;
-  color: #a5a6ae;
-  font-size: 10px;
-  font-weight: 750;
-  letter-spacing: .8px;
-  text-transform: uppercase;
+  grid-template-columns: 56px 176px minmax(0, 1fr) 170px;
+  align-items: center; gap: 15px;
+  padding: 11px 14px;
+  background: var(--accent);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  color: #fff; font-size: 11px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase;
 }
 
 /* LEVEL ROWS */
-
-.level-list {
-  border: 1px solid var(--border);
-  border-radius: 0 0 5px 5px;
-  overflow: hidden;
-}
-
+.level-list { display: flex; flex-direction: column; gap: 8px; }
 .level-row {
   display: grid;
-  grid-template-columns: 55px 116px minmax(0, 1fr) 105px;
-  align-items: center;
-  gap: 13px;
-  min-height: 84px;
-  padding: 10px 13px;
-  background: #1b1d23;
-  border-bottom: 1px solid #30323a;
-  transition: background .12s;
+  grid-template-columns: 56px 176px minmax(0, 1fr) 170px;
+  align-items: center; gap: 15px;
+  min-height: 118px; padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: background .15s, border-color .15s, transform .15s;
+  cursor: pointer;
 }
+.level-row:hover { background: var(--surface-hover); border-color: var(--accent); }
 
-.level-row:last-child {
-  border-bottom: none;
-}
+.rank { font-size: 18px; font-weight: 700; color: #c9c9d2; text-align: center; }
+.level-row[data-rank="1"] .rank { color: #ffd166; }
+.level-row[data-rank="2"] .rank { color: #d4d7e0; }
+.level-row[data-rank="3"] .rank { color: #e0975f; }
 
-.level-row:hover {
-  background: #24262e;
-}
-
-.rank {
-  font-size: 17px;
-  font-weight: 750;
-  color: #c0c1c9;
-  text-align: center;
-}
-
-.level-row[data-rank="1"] .rank {
-  color: #e5c16f;
-}
-
-.level-row[data-rank="2"] .rank {
-  color: #c6c9d2;
-}
-
-.level-row[data-rank="3"] .rank {
-  color: #c99470;
-}
-
-/* THUMBNAIL */
-
+/* THUMBNAIL & MEDAL */
 .thumbnail {
-  display: block;
-  width: 116px;
-  height: 65px;
-  object-fit: cover;
-  background: #101116;
-  border: 1px solid #41434b;
-  border-radius: 3px;
+  display: block; width: 176px; height: 99px; object-fit: cover;
+  background: #0a0a0c; border: 1px solid #33333b; border-radius: 8px;
 }
-
 .thumbnail-placeholder {
-  width: 116px;
-  height: 65px;
-  background: #15171d;
-  border: 1px solid #30333b;
-  border-radius: 3px;
+  width: 176px; height: 99px; background: #101013;
+  border: 1px solid var(--border); border-radius: 8px;
 }
-
-/* LEVEL INFORMATION */
-
-.level-info {
-  min-width: 0;
+.medal-thumb-box {
+  width: 176px; height: 99px; background: #0e0e11;
+  border: 1px solid #33333b; border-radius: 8px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
 }
-
-.level-name {
-  font-size: 15px;
-  font-weight: 750;
-  color: #e9e9ed;
-  overflow-wrap: anywhere;
+.medal-logo-svg { width: 46px; height: 30px; display: block; }
+.medal-thumb-label { font-size: 10px; font-weight: 700; letter-spacing: .9px; color: #e5e6ec; text-transform: uppercase; }
+.medal-preview-card {
+  width: 100%; max-width: 480px; background: #0e0e11;
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 18px 16px; display: flex; align-items: center; gap: 14px;
 }
+.medal-preview-card .medal-logo-svg { width: 58px; height: 38px; flex-shrink: 0; }
+.medal-preview-title { font-size: 13px; font-weight: 700; color: #fff; }
+.medal-preview-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
 
-.level-name a {
-  color: inherit;
-  text-decoration: none;
+/* LEVEL INFO */
+.level-info { min-width: 0; }
+.level-name { font-size: 17px; font-weight: 600; color: #fff; overflow-wrap: anywhere; }
+.level-meta { color: #9a9aa6; font-size: 11px; margin-top: 6px; line-height: 1.6; overflow-wrap: anywhere; }
+.level-id { color: #707080; }
+
+.pts-badge, .records-count-badge, .hardest-badge, .verified-badge {
+  display: inline-block; margin-left: 6px; padding: 2px 8px;
+  border-radius: 20px; font-size: 10px; font-weight: 600; vertical-align: middle;
 }
+.pts-badge { background: rgba(59,130,246,.14); border: 1px solid rgba(59,130,246,.4); color: #93c5fd; }
+.records-count-badge { background: #1a1d24; border: 1px solid #2e3a4a; color: #9bc4ee; }
+.hardest-badge { background: rgba(255,200,80,.12); border: 1px solid rgba(255,200,80,.4); color: #ffd27a; }
+.verified-badge { background: rgba(79,209,139,.12); border: 1px solid rgba(79,209,139,.4); color: #7be0ac; }
 
-.level-name a:hover {
-  color: var(--accent-hover);
+/* NOTIFICATIONS FEED */
+.notif-feed { display: flex; flex-direction: column; gap: 10px; }
+.notif-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
-
-.level-meta {
-  color: #a1a3ad;
+.notif-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.notif-level-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+}
+.notif-timestamp {
   font-size: 11px;
-  margin-top: 6px;
-  line-height: 1.5;
-  overflow-wrap: anywhere;
+  color: var(--muted);
 }
-
-.level-id {
-  color: #777b87;
+.notif-rank-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.notif-pill {
+  padding: 5px 11px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.notif-pill.suggested {
+  background: #10131a;
+  border: 1px solid var(--border);
+  color: #b8bcc8;
+}
+.notif-pill.placed {
+  background: rgba(59,130,246,.14);
+  border: 1px solid rgba(59,130,246,.45);
+  color: #93c5fd;
+}
+.notif-arrow {
+  color: var(--muted);
+  font-weight: 700;
 }
 
 /* ROW ACTIONS */
+.level-actions { display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 8px; }
+.proof-link { display: inline-block; color: var(--accent); text-decoration: none; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.proof-link:hover { color: var(--accent-hover); text-decoration: underline; }
 
-.level-actions {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 10px;
+.edit-btn, .approve-btn, .transfer-btn, .delete-btn {
+  padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 10px; font-weight: 600;
+  transition: background .15s;
 }
+.edit-btn { color: #93c5fd; background: rgba(59,130,246,.1); border: 1px solid rgba(59,130,246,.4); }
+.edit-btn:hover { background: rgba(59,130,246,.22); }
+.approve-btn { color: #7be0ac; background: rgba(79,209,139,.1); border: 1px solid rgba(79,209,139,.4); }
+.approve-btn:hover { background: rgba(79,209,139,.22); }
+.transfer-btn { color: #9bc4ee; background: rgba(90,150,220,.1); border: 1px solid rgba(90,150,220,.4); }
+.transfer-btn:hover { background: rgba(90,150,220,.22); }
+.delete-btn { color: #ff8585; background: transparent; border: 1px solid rgba(255,92,92,.45); }
+.delete-btn:hover { background: rgba(255,92,92,.15); }
 
-.proof-link {
-  display: inline-block;
-  color: #b5a0e5;
-  text-decoration: none;
-  font-size: 11px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.proof-link:hover {
-  color: #d5c4ff;
-  text-decoration: underline;
-}
-
-.delete-btn {
-  padding: 5px 8px;
-  color: #e58a8a;
-  background: transparent;
-  border: 1px solid #684040;
-  border-radius: 3px;
-  cursor: pointer;
-  font-size: 10px;
-}
-
-.delete-btn:hover {
-  background: #402729;
-}
-
-/* EMPTY / LOADING */
-
-.empty {
-  padding: 40px 15px;
-  background: #1b1d23;
-  color: var(--muted);
-  text-align: center;
-  font-size: 13px;
-}
-
-/* LOGIN */
-
-.login-panel {
-  margin-top: 35px;
-  max-width: 380px;
-}
-
+/* PANELS & FORMS */
+.two-col-forms { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-bottom: 26px; }
 .panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  padding: 17px;
-  margin-bottom: 20px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 18px; margin-bottom: 20px;
 }
+.panel h3 { margin: 0 0 10px; font-size: 15px; font-weight: 600; }
 
-.panel h3 {
-  margin: 0 0 14px;
-  font-size: 15px;
+input, select {
+  width: 100%; padding: 10px 12px; margin: 5px 0;
+  background: #101013; border: 1px solid #2c2c34; color: #fff;
+  border-radius: 8px; outline: none; font-size: 12px;
+  transition: border-color .15s;
 }
+input:focus, select:focus { border-color: var(--accent); }
+input::placeholder { color: #6c6c78; }
 
-input {
-  width: 100%;
-  padding: 9px 10px;
-  margin: 5px 0;
-  background: #121319;
-  border: 1px solid #363943;
-  color: white;
-  border-radius: 3px;
-  outline: none;
-  font-size: 12px;
-}
-
-input:focus {
-  border-color: #9179bd;
-}
-
-input::placeholder {
-  color: #777b87;
-}
-
-/* BUTTONS */
-
-button {
-  font-weight: 700;
-  cursor: pointer;
-}
+button { font-weight: 600; cursor: pointer; }
 
 .primary-btn {
-  padding: 9px 14px;
-  margin-top: 8px;
-  background: #8064ad;
-  border: 1px solid #9276bf;
-  border-radius: 3px;
-  color: white;
-  font-size: 12px;
+  padding: 10px 18px; margin-top: 8px;
+  background: var(--accent); border: none; border-radius: 8px;
+  color: #fff; font-size: 12px; transition: background .15s;
 }
-
-.primary-btn:hover {
-  background: #9275c1;
-}
-
+.primary-btn:hover { background: var(--accent-hover); }
 .secondary-btn {
-  background: #292c34;
-  border: 1px solid #444751;
-  border-radius: 3px;
-  color: #dddde3;
-  padding: 7px 10px;
-  font-size: 11px;
+  background: #1d1d23; border: 1px solid #33333b; border-radius: 8px;
+  color: #e0e0e6; padding: 8px 12px; font-size: 11px; transition: background .15s, border-color .15s;
 }
+.secondary-btn:hover { background: #26262e; border-color: var(--accent); }
 
-.secondary-btn:hover {
-  background: #363943;
-}
+.auth-toggle-link { color: var(--accent); font-size: 11px; cursor: pointer; margin-top: 12px; display: inline-block; }
+.auth-toggle-link:hover { text-decoration: underline; }
 
-.hidden {
-  display: none !important;
+.user-status-card {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 18px; margin-bottom: 20px; font-size: 12px;
 }
+.user-status-actions { display: flex; gap: 8px; }
+.hidden { display: none !important; }
 
 /* EDITOR */
-
 .editor-panel {
-  margin-top: 30px;
-  background: #191b21;
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  padding: 18px;
+  margin: 20px 0 26px; background: var(--surface);
+  border: 1px solid rgba(59,130,246,.35); border-radius: 10px; padding: 20px;
+}
+.editor-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.editor-header h3 { margin: 0; }
+.editor-email { color: var(--accent); font-size: 11px; font-weight: 400; }
+.editor-section { margin-top: 22px; }
+.editor-section h4 { text-transform: uppercase; font-size: 11px; letter-spacing: .8px; color: var(--accent); margin: 0 0 10px; font-weight: 600; }
+
+.queue-list { display: flex; flex-direction: column; gap: 10px; }
+.queue-item {
+  background: #101013; border: 1px solid var(--border); border-radius: 8px;
+  padding: 12px; display: flex; flex-direction: column; gap: 10px; font-size: 12px;
+}
+.queue-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.queue-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; flex-shrink: 0; }
+.approve-rank-input { width: 66px; margin: 0; padding: 4px 7px; font-size: 11px; height: 28px; }
+.approve-verifier-input { width: 155px; margin: 0; padding: 4px 8px; font-size: 11px; height: 28px; }
+
+.video-preview-wrap {
+  width: 100%; max-width: 480px; aspect-ratio: 16 / 9; background: #000;
+  border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+}
+.video-preview-frame { width: 100%; height: 100%; border: 0; display: block; }
+
+.form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.form-grid input, .form-grid select { margin: 0; height: 38px; }
+.helper-note { margin-top: 8px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+.empty {
+  padding: 28px 15px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; color: var(--muted); text-align: center; font-size: 13px;
 }
 
-.editor-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
+/* SPLIT WORKSPACE (LEADERBOARD & PLAYERS) */
+.split-tab-shell {
+  max-width: 1280px; margin: 0 auto; min-height: calc(100vh - 64px);
+  display: grid; grid-template-columns: 340px minmax(0, 1fr);
+}
+.split-sidebar {
+  background: transparent; border-right: 1px solid var(--border);
+  padding: 22px 16px 36px; display: flex; flex-direction: column; gap: 12px;
+}
+.split-sidebar-title { margin: 0; font-size: 22px; font-weight: 700; outline: none; }
+.split-sidebar .search-box { width: 100%; height: 40px; }
+.sidebar-player-list { display: flex; flex-direction: column; gap: 4px; }
+.sidebar-player-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 11px 14px; border-radius: 8px; cursor: pointer;
+  background: var(--surface); border: 1px solid transparent;
+  transition: background .15s, border-color .15s;
+}
+.sidebar-player-item:hover { background: var(--surface-hover); border-color: #34343d; }
+.sidebar-player-item.active { background: var(--accent); border-color: var(--accent); }
+.sidebar-player-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.sidebar-rank { color: #9a9aa6; font-size: 12px; font-weight: 600; width: 34px; flex-shrink: 0; }
+.sidebar-pts-subtle { color: #93c5fd; font-size: 11px; font-weight: 600; flex-shrink: 0; }
+.sidebar-name { font-size: 13px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sidebar-player-item.active .sidebar-rank,
+.sidebar-player-item.active .sidebar-pts-subtle { color: rgba(255,255,255,.9); }
+
+.split-detail-pane { padding: 28px 34px 56px; min-width: 0; background: transparent; }
+.cccl-player-header { border-bottom: 1px solid var(--border); padding-bottom: 18px; margin-bottom: 22px; }
+.cccl-player-title { margin: 0; font-size: 32px; font-weight: 700; letter-spacing: -.5px; color: #fff; }
+.cccl-player-points { margin-top: 8px; font-size: 18px; font-weight: 600; color: var(--accent); }
+.cccl-section-heading { margin: 26px 0 12px; font-size: 20px; font-weight: 700; color: #f4f4f7; }
+
+.cccl-completed-list { display: flex; flex-direction: column; gap: 6px; }
+.cccl-completed-row {
+  display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; align-items: center; gap: 14px;
+  padding: 13px 16px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; transition: background .15s, border-color .15s; cursor: pointer;
+}
+.cccl-completed-row:hover { background: var(--surface-hover); border-color: var(--accent); }
+.cccl-comp-rank { font-weight: 700; color: #9a9aa6; font-size: 14px; }
+.cccl-comp-name { font-weight: 600; font-size: 14px; color: #fff; }
+.cccl-comp-pts { font-weight: 700; font-size: 14px; color: var(--accent); white-space: nowrap; }
+
+.hardest-highlight {
+  background: linear-gradient(135deg, rgba(59,130,246,.12), rgba(59,130,246,.03));
+  border: 1px solid rgba(59,130,246,.45); border-radius: 10px; padding: 16px; margin-top: 8px;
 }
 
-.editor-header h3 {
-  margin: 0;
+/* MODALS */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,.78); backdrop-filter: blur(3px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px; z-index: 100; overflow-y: auto;
 }
-
-.editor-email {
-  color: #b5a0e5;
-  font-size: 11px;
-  font-weight: normal;
+.modal-card {
+  width: 100%; max-width: 480px; background: #141418;
+  border: 1px solid var(--border); border-radius: 12px; padding: 22px;
+  max-height: 90vh; overflow-y: auto;
 }
+.modal-card.wide-modal { max-width: 680px; }
+.modal-card h3 { margin: 0 0 12px; font-size: 17px; font-weight: 700; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
 
-.editor-section {
-  margin-top: 22px;
+.record-cards-list { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+.record-card {
+  background: #101013; border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px; display: flex; flex-direction: column; gap: 8px;
 }
-
-.editor-section h4 {
-  text-transform: uppercase;
-  font-size: 10px;
-  letter-spacing: .8px;
-  color: #a5a5ae;
-  margin: 0 0 10px;
-}
-
-.template-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.template-item {
-  background: #121319;
-  border: 1px solid #30333b;
-  border-radius: 3px;
-  padding: 9px 11px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 12px;
-}
-
-.template-info {
-  min-width: 0;
-}
-
-.template-info strong {
-  font-size: 12px;
-}
-
-.template-info span {
-  color: var(--muted);
-  font-size: 10px;
-}
-
-.template-btn {
-  flex-shrink: 0;
-  padding: 6px 9px;
-  border: 1px solid #504069;
-  border-radius: 3px;
-  background: #292333;
-  color: #c9b5ec;
-  font-size: 10px;
-  margin: 0;
-}
-
-.template-btn:hover {
-  background: #3b304d;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 7px;
-}
-
-.form-grid input {
-  margin: 0;
-  height: 36px;
-}
-
-.add-btn {
-  margin-top: 12px;
-}
-
-/* FOOTER */
+.record-card-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 
 footer {
-  margin-top: 35px;
-  padding-top: 15px;
-  border-top: 1px solid var(--border);
-  color: #777a85;
-  font-size: 10px;
-  text-align: center;
+  margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--border);
+  color: #6c6c78; font-size: 10px; text-align: center; letter-spacing: 1px;
 }
 
-/* MOBILE */
-
+/* RESPONSIVE */
+@media (max-width: 860px) {
+  .split-tab-shell { grid-template-columns: 1fr; min-height: auto; }
+  .split-sidebar { border-right: none; border-bottom: 1px solid var(--border); max-height: 320px; overflow-y: auto; }
+  .split-detail-pane { padding: 20px 16px 40px; }
+}
+@media (max-width: 750px) {
+  .two-col-forms { grid-template-columns: 1fr; }
+}
 @media (max-width: 650px) {
-  .container {
-    padding: 0 12px 35px;
-  }
-
-  .header-inner {
-    padding: 0 12px;
-  }
-
-  .header-nav {
-    gap: 8px;
-    font-size: 10px;
-  }
-
-  .page-heading {
-    padding: 28px 0 20px;
-  }
-
-  .page-heading h1 {
-    font-size: 23px;
-  }
-
-  .list-toolbar {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .search-box {
-    width: 100%;
-  }
-
-  .column-headings {
-    display: none;
-  }
-
-  .level-list {
-    border-radius: 4px;
-  }
-
-  .level-row {
-    grid-template-columns: 35px 82px minmax(0, 1fr);
-    gap: 9px;
-    padding: 9px;
-    min-height: 77px;
-  }
-
-  .thumbnail,
-  .thumbnail-placeholder {
-    width: 82px;
-    height: 50px;
-  }
-
-  .rank {
-    font-size: 14px;
-  }
-
-  .level-name {
-    font-size: 12px;
-  }
-
-  .level-meta {
-    font-size: 9px;
-    margin-top: 4px;
-  }
-
-  .level-actions {
-    grid-column: 3;
-    justify-content: flex-start;
-    margin-top: -3px;
-  }
-
-  .level-row {
-    grid-template-rows: auto auto;
-  }
-
-  .proof-link {
-    font-size: 10px;
-  }
-
-  .editor-panel {
-    padding: 13px;
-  }
-
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 370px) {
-  .header-status {
-    display: none;
-  }
-
-  .level-row {
-    grid-template-columns: 30px 70px minmax(0, 1fr);
-    gap: 7px;
-  }
-
-  .thumbnail,
-  .thumbnail-placeholder {
-    width: 70px;
-    height: 43px;
-  }
+  .container { padding: 0 12px 35px; }
+  .header-inner { padding: 0 12px; }
+  .header-nav { gap: 2px; }
+  .nav-btn { padding: 7px 9px; font-size: 10px; }
+  .list-toolbar { align-items: flex-start; flex-direction: column; }
+  .search-box { width: 100%; }
+  .column-headings { display: none; }
+  .level-row { grid-template-columns: 36px 116px minmax(0, 1fr); gap: 10px; padding: 10px; min-height: 88px; }
+  .thumbnail, .thumbnail-placeholder, .medal-thumb-box { width: 116px; height: 65px; }
+  .medal-logo-svg { width: 34px; height: 22px; }
+  .rank { font-size: 14px; }
+  .level-name { font-size: 13px; }
+  .level-meta { font-size: 10px; margin-top: 4px; }
+  .level-actions { grid-column: 3; justify-content: flex-start; margin-top: 4px; }
+  .queue-top { flex-direction: column; }
+  .form-grid { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -635,172 +427,329 @@ footer {
     </div>
 
     <div class="header-nav">
-      <span>CHALLENGE LIST</span>
+      <button class="nav-btn active" type="button" id="tabListBtn" onclick="switchView('list')">LIST</button>
+      <button class="nav-btn" type="button" id="tabLeaderboardBtn" onclick="switchView('leaderboard')">LEADERBOARD</button>
+      <button class="nav-btn" type="button" id="tabPlayersBtn" onclick="switchView('players')">PLAYERS</button>
+      <button class="nav-btn" type="button" id="tabNotificationsBtn" onclick="switchView('notifications')">NOTIFICATIONS</button>
     </div>
   </div>
 </header>
 
-<div class="container">
+<datalist id="signedUpUsersList"></datalist>
 
-  <div class="page-heading">
-    <h1>Diddy List</h1>
-    <p>The official Diddy List challenge rankings.</p>
-  </div>
+<!-- LIST TAB VIEW -->
+<div id="listView">
+  <div class="container">
 
-  <!-- EDITOR LOGIN -->
+    <div class="page-heading">
+      <h1>Diddy List</h1>
+      <p>The official Diddy List challenge rankings, records, and points leaderboard.</p>
+    </div>
 
-  <div class="panel login-panel" id="loginPanel">
-    <h3>Editor Login</h3>
+    <!-- LOGIN / SIGN UP -->
+    <div class="panel" id="loginPanel" style="max-width: 380px;">
+      <h3 id="authTitle">Account Login</h3>
 
-    <input
-      type="email"
-      id="loginEmail"
-      placeholder="Editor Email"
-    />
+      <input type="text" id="signupNickname" class="hidden" placeholder="Nickname (used on records & leaderboard) *" />
+      <input type="email" id="loginEmail" placeholder="Email Address" />
+      <input type="password" id="loginPassword" placeholder="Password" />
 
-    <input
-      type="password"
-      id="loginPassword"
-      placeholder="Password"
-    />
+      <button class="primary-btn" id="authSubmitBtn" onclick="handleAuthSubmit()">Log In</button>
 
-    <button class="primary-btn" onclick="login()">
-      Log In
-    </button>
-  </div>
-
-  <!-- EDITOR CONTROLS -->
-
-  <div class="editor-panel hidden" id="editorPanel">
-
-    <div class="editor-header">
       <div>
-        <h3>
-          Add Level
-          <span class="editor-email" id="editorEmail"></span>
-        </h3>
+        <span class="auth-toggle-link" id="authToggleLink" onclick="toggleAuthMode()">
+          Don't have an account? Sign Up
+        </span>
+      </div>
+    </div>
+
+    <!-- STANDARD USER LOGGED IN BAR -->
+    <div class="user-status-card hidden" id="userStatusPanel">
+      <div>
+        Logged in as <strong id="loggedUserNickname"></strong>
+        <span style="color:#999ca7;margin-left:6px;">(<span id="loggedUserEmail"></span> · Member Account)</span>
+      </div>
+      <div class="user-status-actions">
+        <button class="secondary-btn" onclick="openNicknameModal()">Change Nickname</button>
+        <button class="secondary-btn" onclick="logout()">Log Out</button>
+      </div>
+    </div>
+
+    <!-- EDITOR CONTROLS & APPROVAL QUEUES -->
+    <div class="editor-panel hidden" id="editorPanel">
+      <div class="editor-header">
+        <h3>Editor Panel <span class="editor-email" id="editorEmail"></span></h3>
+        <div class="user-status-actions">
+          <button class="secondary-btn" onclick="openNicknameModal()">Change Nickname</button>
+          <button class="secondary-btn" onclick="logout()">Log Out</button>
+        </div>
       </div>
 
-      <button class="secondary-btn" onclick="logout()">
-        Log Out
-      </button>
-    </div>
-
-    <div class="editor-section">
-      <h4>Quick Level Templates (5)</h4>
-      <div class="template-list" id="templateList"></div>
-    </div>
-
-    <div class="editor-section">
-      <h4>Level Details</h4>
-
-      <div class="form-grid">
-        <input type="number" id="rank" placeholder="Rank (e.g. 1)" />
-        <input type="text" id="name" placeholder="Level Name" />
-        <input type="text" id="creator" placeholder="Creator" />
-        <input type="text" id="verifier" placeholder="Verifier" />
-        <input type="text" id="level_id" placeholder="Level ID" />
-        <input type="text" id="video_url" placeholder="Video Proof URL" />
+      <div class="editor-section">
+        <h4>Pending Level Submissions</h4>
+        <div class="queue-list" id="pendingLevelsQueue">
+          <div class="empty">No pending level submissions.</div>
+        </div>
       </div>
 
-      <button class="primary-btn add-btn" onclick="addLevel()">
-        Add Level
-      </button>
+      <div class="editor-section">
+        <h4>Pending Record Submissions</h4>
+        <div class="queue-list" id="pendingRecordsQueue">
+          <div class="empty">No pending records.</div>
+        </div>
+      </div>
+
+      <div class="editor-section">
+        <h4>Add Level Directly</h4>
+        <div class="form-grid">
+          <input type="number" id="rank" min="1" placeholder="Rank (e.g. 1)" />
+          <input type="text" id="name" placeholder="Level Name" />
+          <input type="text" id="creator" placeholder="Creator" />
+          <input type="text" id="verifier" list="signedUpUsersList" placeholder="Search or type Verifier (gets level pts)" />
+          <input type="text" id="level_id" placeholder="Level ID" />
+          <input type="text" id="video_url" placeholder="Video Proof URL" />
+          <input type="text" id="custom_thumb_url" placeholder="Custom Thumbnail URL (Direct .png/.jpg link)" style="grid-column: span 2;" />
+        </div>
+        <button class="primary-btn" onclick="addLevel()">Add Level</button>
+        <div class="helper-note">
+          Adding a level at an existing rank automatically pushes levels at or below that rank down by 1.
+        </div>
+      </div>
     </div>
+
+    <!-- PUBLIC SUBMISSION FORMS -->
+    <div class="two-col-forms">
+      <div class="panel" style="margin-bottom:0;">
+        <h3>Submit a Level</h3>
+        <div class="form-grid">
+          <input type="text" id="subName" placeholder="Level Name *" />
+          <input type="number" id="subRank" min="1" placeholder="Suggested Rank (e.g. 1)" />
+          <input type="text" id="subCreator" placeholder="Creator" />
+          <input type="text" id="subVerifier" placeholder="Verifier" />
+          <input type="text" id="subLevelId" placeholder="Level ID" />
+          <input type="text" id="subVideoUrl" placeholder="Verification Video URL" />
+          <input type="text" id="subCustomThumb" placeholder="Custom Thumbnail URL (Direct .png/.jpg link)" style="grid-column: span 2;" />
+        </div>
+        <input type="text" id="subAuthor" placeholder="Your Name / Handle (optional)" />
+        <button class="primary-btn" type="button" onclick="submitLevelProposal()">Submit Level for Approval</button>
+      </div>
+
+      <div class="panel" style="margin-bottom:0;">
+        <h3>Submit a Record</h3>
+        <select id="recLevelSelect">
+          <option value="">Select a level...</option>
+        </select>
+        <input type="text" id="recPlayerName" placeholder="Nickname (or create an account to lock yours in) *" />
+        <input type="text" id="recVideoUrl" placeholder="Completion Proof URL (YouTube / Medal) *" />
+        <button class="primary-btn" type="button" onclick="submitRecord()">Submit Record for Approval</button>
+        <div class="helper-note">
+          Points are awarded once an editor approves your record (#1 = 100 pts, #2 = 85 pts, #3 = 72 pts, etc.). Verifiers also receive full level points.
+        </div>
+      </div>
+    </div>
+
+    <div class="list-toolbar">
+      <h2 id="listHeading" tabindex="-1">Challenge Rankings</h2>
+      <input
+        type="text"
+        class="search-box"
+        id="searchInput"
+        placeholder="Search levels..."
+        oninput="filterLevels()"
+      />
+    </div>
+
+    <div class="column-headings">
+      <div>Rank</div>
+      <div>Level</div>
+      <div>Information</div>
+      <div style="text-align:right;">Actions / Proof</div>
+    </div>
+
+    <div class="level-list" id="list">
+      <div class="empty">Loading levels...</div>
+    </div>
+
+    <footer>
+      DIDDY LIST · CHALLENGE RANKINGS
+    </footer>
 
   </div>
+</div>
 
-  <!-- PUBLIC LIST -->
-
-  <div class="list-toolbar">
-    <h2>Challenge Rankings</h2>
-
+<!-- LEADERBOARD TAB VIEW (SPLIT WORKSPACE) -->
+<div id="leaderboardView" class="split-tab-shell hidden">
+  <aside class="split-sidebar">
+    <h2 class="split-sidebar-title" id="leaderboardHeading" tabindex="-1">Leaderboard</h2>
     <input
       type="text"
       class="search-box"
-      id="searchInput"
-      placeholder="Search levels..."
-      oninput="filterLevels()"
+      id="leaderboardSearchInput"
+      placeholder="Search player..."
+      oninput="renderLeaderboard()"
     />
+    <div class="sidebar-player-list" id="leaderboardList">
+      <div class="empty">Loading leaderboard...</div>
+    </div>
+  </aside>
+
+  <main class="split-detail-pane" id="leaderboardDetailPane">
+    <div class="empty">Select a player on the left to inspect their profile &amp; completions.</div>
+  </main>
+</div>
+
+<!-- PLAYERS TAB VIEW (SPLIT WORKSPACE) -->
+<div id="playersView" class="split-tab-shell hidden">
+  <aside class="split-sidebar">
+    <h2 class="split-sidebar-title" id="playersHeading" tabindex="-1">Players</h2>
+    <input
+      type="text"
+      class="search-box"
+      id="playerSearchInput"
+      placeholder="Search username..."
+      oninput="renderPlayersDirectory()"
+    />
+    <div class="sidebar-player-list" id="playersList">
+      <div class="empty">Loading players...</div>
+    </div>
+  </aside>
+
+  <main class="split-detail-pane" id="playersDetailPane">
+    <div class="empty">Select a player on the left to view their completions.</div>
+  </main>
+</div>
+
+<!-- NOTIFICATIONS TAB VIEW -->
+<div id="notificationsView" class="hidden">
+  <div class="container">
+    <div class="page-heading">
+      <h1 id="notificationsHeading" tabindex="-1">Notifications</h1>
+      <p>See levels that got approved and placed, comparing where players suggested them vs. where they got placed.</p>
+    </div>
+
+    <div class="notif-feed" id="notificationsFeed">
+      <div class="empty">Loading placement notifications...</div>
+    </div>
+
+    <footer>
+      DIDDY LIST · CHALLENGE RANKINGS
+    </footer>
   </div>
+</div>
 
-  <div class="column-headings">
-    <div>Rank</div>
-    <div>Level</div>
-    <div>Information</div>
-    <div style="text-align:right;">Proof</div>
+<!-- LEVEL COMPLETIONS & VIDEOS MODAL -->
+<div class="modal-backdrop hidden" id="levelRecordsModal" onclick="handleBackdropClose(event, 'levelRecordsModal')">
+  <div class="modal-card wide-modal">
+    <div class="queue-top">
+      <div>
+        <h3 id="levelRecordsTitle" style="margin-bottom:4px;">Level Records</h3>
+        <div class="helper-note" id="levelRecordsMeta" style="margin-top:0;"></div>
+      </div>
+      <button class="secondary-btn" type="button" onclick="closeLevelRecordsModal()">Close</button>
+    </div>
+
+    <div id="levelRecordsVerification" style="margin-top:12px;"></div>
+
+    <h4 style="text-transform:uppercase;font-size:10px;letter-spacing:.8px;color:#a5a5ae;margin:18px 0 6px;">
+      Approved Completions
+    </h4>
+    <div class="record-cards-list" id="levelRecordsList"></div>
   </div>
+</div>
 
-  <div class="level-list" id="list">
-    <div class="empty">Loading levels...</div>
+<!-- TRANSFER RECORD MODAL -->
+<div class="modal-backdrop hidden" id="transferRecordModal">
+  <div class="modal-card">
+    <h3>Move Record to Another Player</h3>
+    <p style="color:#a5a5ae;font-size:12px;margin:0 0 12px;" id="transferRecordDetails"></p>
+    <input type="hidden" id="transferRecordId" />
+
+    <label style="font-size:11px;color:#a5a5ae;text-transform:uppercase;letter-spacing:.7px;display:block;margin-bottom:4px;">
+      Target Player Username / Nickname *
+    </label>
+    <input
+      type="text"
+      id="targetPlayerNicknameInput"
+      list="signedUpUsersList"
+      placeholder="Type or select new account username..."
+    />
+    <div class="helper-note">
+      This will transfer the completion credit, proof video, and leaderboard points of this record to the selected account.
+    </div>
+
+    <div class="modal-actions">
+      <button class="secondary-btn" type="button" onclick="closeTransferModal()">Cancel</button>
+      <button class="primary-btn" type="button" onclick="executeRecordTransfer()">Transfer Record</button>
+    </div>
   </div>
+</div>
 
-  <footer>
-    DIDDY LIST · CHALLENGE RANKINGS
-  </footer>
+<!-- EDIT LEVEL MODAL -->
+<div class="modal-backdrop hidden" id="editModal">
+  <div class="modal-card">
+    <h3>Edit Published Level</h3>
+    <input type="hidden" id="editRowId" />
+    <div class="form-grid">
+      <input type="number" id="editRank" min="1" placeholder="Rank" />
+      <input type="text" id="editName" placeholder="Level Name" />
+      <input type="text" id="editCreator" placeholder="Creator" />
+      <input type="text" id="editVerifier" list="signedUpUsersList" placeholder="Search or select Verifier" />
+      <input type="text" id="editLevelId" placeholder="Level ID" />
+      <input type="text" id="editVideoUrl" placeholder="Video Proof URL" />
+      <input type="text" id="editCustomThumb" placeholder="Custom Thumbnail URL (Direct .png/.jpg link)" style="grid-column: span 2;" />
+    </div>
+    <div class="helper-note">
+      Changing the Verifier automatically transfers the level's verifier points and completion credit to that user.
+    </div>
+    <div class="modal-actions">
+      <button class="secondary-btn" type="button" onclick="closeEditModal()">Cancel</button>
+      <button class="primary-btn" type="button" onclick="saveEditedLevel()">Save Changes</button>
+    </div>
+  </div>
+</div>
 
+<!-- CHANGE NICKNAME MODAL -->
+<div class="modal-backdrop hidden" id="nicknameModal">
+  <div class="modal-card">
+    <h3>Change Account Nickname</h3>
+    <input type="text" id="newNicknameInput" placeholder="Enter new nickname *" />
+    <div class="helper-note">
+      Updating your nickname will instantly update all of your past completions, verifications, and leaderboard points.
+    </div>
+    <div class="modal-actions">
+      <button class="secondary-btn" type="button" onclick="closeNicknameModal()">Cancel</button>
+      <button class="primary-btn" type="button" onclick="saveNewNickname()">Save Nickname</button>
+    </div>
+  </div>
 </div>
 
 <script>
 const SUPABASE_URL = "https://ljzeslmzanjhymscdcxk.supabase.co";
 const SUPABASE_KEY = "sb_publishable_0Byo8YMjM5x75UTZszUFrA_eDNew7hA";
 
-const sb = supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-/* ORIGINAL TEMPLATES */
-
-const LEVEL_TEMPLATES = [
-  {
-    rank: 1,
-    name: "Neon Overdrive",
-    creator: "SampleCreator1",
-    verifier: "SampleVerifier1",
-    level_id: "10000001",
-    video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-  },
-  {
-    rank: 2,
-    name: "Chronos Wave",
-    creator: "SampleCreator2",
-    verifier: "SampleVerifier2",
-    level_id: "10000002",
-    video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-  },
-  {
-    rank: 3,
-    name: "Static Pulse",
-    creator: "SampleCreator3",
-    verifier: "SampleVerifier3",
-    level_id: "10000003",
-    video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-  },
-  {
-    rank: 4,
-    name: "Vortex Corridor",
-    creator: "SampleCreator4",
-    verifier: "SampleVerifier4",
-    level_id: "10000004",
-    video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-  },
-  {
-    rank: 5,
-    name: "Eclipse Circuit",
-    creator: "SampleCreator5",
-    verifier: "SampleVerifier5",
-    level_id: "10000005",
-    video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-  }
-];
-
-/* USER SESSION */
+const MEDAL_LOGO_SVG = `
+  <svg class="medal-logo-svg" viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M12 24C12 20.5 14 17.5 17 15.8L29.5 8.8C32.7 7 36.7 7.1 39.8 9L60 21.2L80.2 9C83.3 7.1 87.3 7 90.5 8.8L103 15.8C106 17.5 108 20.5 108 24V56C108 59.4 106.1 62.5 103.2 64.2L97.5 67.5C93.5 69.8 88.5 67 88.5 62.3V33.6L64.6 48C61.8 49.7 58.2 49.7 55.4 48L31.5 33.6V62.3C31.5 67 26.5 69.8 22.5 67.5L16.8 64.2C13.9 62.5 12 59.4 12 56V24Z" fill="#FFFFFF"/>
+    <path d="M40.5 46.8C40.5 43.2 44.4 40.9 47.5 42.8L55.2 47.5C58.4 49.5 58.4 54.1 55.2 56.1L47.5 60.8C44.4 62.7 40.5 60.4 40.5 56.8V46.8Z" fill="#FFFFFF"/>
+    <path d="M79.5 46.8C79.5 43.2 75.6 40.9 72.5 42.8L64.8 47.5C61.6 49.5 61.6 54.1 64.8 56.1L72.5 60.8C75.6 62.7 79.5 60.4 79.5 56.8V46.8Z" fill="#FFFFFF"/>
+  </svg>
+`;
 
 let currentUser = null;
+let currentNickname = "";
+let isEditor = false;
 let allLevels = [];
-
-/* HTML ESCAPING */
+let approvedRecords = [];
+let pendingLevelSubs = [];
+let pendingRecords = [];
+let signedUpUsers = [];
+let allNotifications = [];
+let activeModalLevelId = null;
+let selectedLeaderboardPlayer = null;
+let selectedPlayersTabPlayer = null;
+let isSignUpMode = false;
 
 function escapeHTML(value) {
   return String(value ?? "").replace(/[&<>"']/g, char => ({
@@ -812,362 +761,1382 @@ function escapeHTML(value) {
   })[char]);
 }
 
-/* YOUTUBE THUMBNAIL DETECTION */
-
-function getYouTubeId(url) {
-  if (!url) return null;
-
-  try {
-    const parsed = new URL(url);
-    const host = parsed.hostname.replace(/^www\./, "");
-
-    if (host === "youtu.be") {
-      const id = parsed.pathname.split("/")[1];
-      return /^[a-zA-Z0-9_-]{11}$/.test(id || "") ? id : null;
-    }
-
-    if (
-      host === "youtube.com" ||
-      host === "m.youtube.com" ||
-      host === "youtube-nocookie.com"
-    ) {
-      const id =
-        parsed.searchParams.get("v") ||
-        parsed.pathname.match(/\/(?:embed|shorts)\/([a-zA-Z0-9_-]{11})/)?.[1];
-
-      return /^[a-zA-Z0-9_-]{11}$/.test(id || "") ? id : null;
-    }
-  } catch {
-    return null;
-  }
-
-  return null;
+function getPointsForRank(rank) {
+  const r = Number(rank);
+  if (!r || r < 1) return 10;
+  return Math.max(10, Math.round(100 * Math.pow(0.86, r - 1)));
 }
 
-/* SAFE LINKS */
-
 function safeURL(value) {
+  const trimmed = String(value ?? "").trim();
+  if (!trimmed) return "";
   try {
-    const url = new URL(value);
-
-    if (url.protocol === "https:" || url.protocol === "http:") {
-      return url.href;
-    }
+    const url = new URL(trimmed);
+    if (url.protocol === "https:" || url.protocol === "http:") return url.href;
   } catch {
     return "";
   }
-
   return "";
 }
 
-/* TEMPLATES */
+function isNicknameTaken(nickname, excludeUserId = null) {
+  const clean = String(nickname ?? "").trim().toLowerCase();
+  if (!clean) return false;
+  return signedUpUsers.some(p => {
+    if (excludeUserId && String(p.id) === String(excludeUserId)) return false;
+    return String(p.nickname ?? "").trim().toLowerCase() === clean;
+  });
+}
 
-function renderTemplates() {
-  const listEl = document.getElementById("templateList");
+function refreshSignedUpUsersList() {
+  const names = new Set();
+  for (const p of signedUpUsers) {
+    const n = String(p?.nickname ?? "").trim();
+    if (n) names.add(n);
+  }
+  for (const l of allLevels) {
+    const v = String(l?.verifier ?? "").trim();
+    if (v && v.toLowerCase() !== "unknown") names.add(v);
+  }
+  for (const r of approvedRecords) {
+    const pl = String(r?.player_name ?? "").trim();
+    if (pl && pl.toLowerCase() !== "unknown") names.add(pl);
+  }
+  for (const s of pendingLevelSubs) {
+    const sv = String(s?.verifier ?? "").trim();
+    const sa = String(s?.submitter_name ?? "").trim();
+    if (sv && sv.toLowerCase() !== "unknown") names.add(sv);
+    if (sa && sa.toLowerCase() !== "unknown") names.add(sa);
+  }
 
-  listEl.innerHTML = LEVEL_TEMPLATES.map((tpl, idx) => `
-    <div class="template-item">
-      <div class="template-info">
-        <strong>
-          #${tpl.rank} — ${escapeHTML(tpl.name)}
-        </strong>
-        <br>
-        <span>
-          By ${escapeHTML(tpl.creator)}
-          · ID: ${escapeHTML(tpl.level_id)}
-        </span>
+  const sorted = Array.from(names).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+  const dl = document.getElementById("signedUpUsersList");
+  dl.innerHTML = sorted.map(name => `<option value="${escapeHTML(name)}"></option>`).join("");
+}
+
+function getVideoDetails(url, customThumbUrl = null) {
+  let ytThumb = null;
+  let embedUrl = null;
+  let isMedal = false;
+
+  if (url) {
+    try {
+      const parsed = new URL(String(url).trim());
+      const host = parsed.hostname.replace(/^www\./, "");
+
+      if (host === "youtu.be") {
+        const id = parsed.pathname.split("/")[1];
+        if (/^[a-zA-Z0-9_-]{11}$/.test(id || "")) {
+          ytThumb = `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+          embedUrl = `https://www.youtube.com/embed/${id}`;
+        }
+      } else if (host === "youtube.com" || host === "m.youtube.com" || host === "youtube-nocookie.com") {
+        const id =
+          parsed.searchParams.get("v") ||
+          parsed.pathname.match(/\/(?:embed|shorts)\/([a-zA-Z0-9_-]{11})/)?.[1];
+        if (/^[a-zA-Z0-9_-]{11}$/.test(id || "")) {
+          ytThumb = `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+          embedUrl = `https://www.youtube.com/embed/${id}`;
+        }
+      } else if (host === "medal.tv" || host.endsWith(".medal.tv")) {
+        isMedal = true;
+      }
+    } catch {
+      // ignore invalid video URL
+    }
+  }
+
+  const safeCustom = safeURL(customThumbUrl);
+  if (safeCustom) {
+    return {
+      type: "custom",
+      thumbUrl: safeCustom,
+      fallbackThumbUrl: ytThumb,
+      embedUrl,
+      isMedal
+    };
+  }
+
+  if (ytThumb) {
+    return { type: "youtube", thumbUrl: ytThumb, fallbackThumbUrl: null, embedUrl, isMedal: false };
+  }
+
+  if (isMedal) {
+    return { type: "medal", thumbUrl: null, fallbackThumbUrl: null, embedUrl: null, isMedal: true };
+  }
+
+  return { type: null, thumbUrl: null, fallbackThumbUrl: null, embedUrl: null, isMedal: false };
+}
+
+function renderVideoPreview(videoUrl, customThumbUrl = null) {
+  const safeProof = safeURL(videoUrl);
+  if (!safeProof) {
+    return `<div class="helper-note">No video link provided.</div>`;
+  }
+
+  const { embedUrl, isMedal } = getVideoDetails(safeProof, customThumbUrl);
+
+  if (isMedal) {
+    return `
+      <div class="medal-preview-card">
+        ${MEDAL_LOGO_SVG}
+        <div>
+          <div class="medal-preview-title">Medal Clip Proof</div>
+          <div class="medal-preview-sub">Medal blocks embedded frames on external sites — open directly to watch.</div>
+        </div>
       </div>
+      <div style="margin-top:6px;">
+        <a class="proof-link" href="${escapeHTML(safeProof)}" target="_blank" rel="noopener noreferrer">Open Medal Clip ↗</a>
+      </div>
+    `;
+  }
 
-      <button
-        class="template-btn"
-        type="button"
-        onclick="applyTemplate(${idx})"
-      >
-        Use Template
-      </button>
+  return `
+    ${
+      embedUrl
+        ? `
+          <div class="video-preview-wrap">
+            <iframe
+              class="video-preview-frame"
+              src="${escapeHTML(embedUrl)}"
+              allow="autoplay; encrypted-media; picture-in-picture"
+              allowfullscreen
+              loading="lazy"
+            ></iframe>
+          </div>
+        `
+        : ""
+    }
+    <div>
+      <a class="proof-link" href="${escapeHTML(safeProof)}" target="_blank" rel="noopener noreferrer">Open Video Proof ↗</a>
     </div>
-  `).join("");
+  `;
 }
 
-function applyTemplate(idx) {
-  const tpl = LEVEL_TEMPLATES[idx];
+function switchView(view) {
+  const listView = document.getElementById("listView");
+  const lbView = document.getElementById("leaderboardView");
+  const playersView = document.getElementById("playersView");
+  const notifView = document.getElementById("notificationsView");
 
-  if (!tpl) return;
+  const tabList = document.getElementById("tabListBtn");
+  const tabLb = document.getElementById("tabLeaderboardBtn");
+  const tabPlayers = document.getElementById("tabPlayersBtn");
+  const tabNotif = document.getElementById("tabNotificationsBtn");
 
-  document.getElementById("rank").value = tpl.rank;
-  document.getElementById("name").value = tpl.name;
-  document.getElementById("creator").value = tpl.creator;
-  document.getElementById("verifier").value = tpl.verifier;
-  document.getElementById("level_id").value = tpl.level_id;
-  document.getElementById("video_url").value = tpl.video_url;
+  listView.classList.add("hidden");
+  lbView.classList.add("hidden");
+  playersView.classList.add("hidden");
+  notifView.classList.add("hidden");
+
+  tabList.classList.remove("active");
+  tabLb.classList.remove("active");
+  tabPlayers.classList.remove("active");
+  tabNotif.classList.remove("active");
+
+  let headingToFocus = null;
+
+  if (view === "leaderboard") {
+    lbView.classList.remove("hidden");
+    tabLb.classList.add("active");
+    renderLeaderboard();
+    headingToFocus = document.getElementById("leaderboardHeading");
+  } else if (view === "players") {
+    playersView.classList.remove("hidden");
+    tabPlayers.classList.add("active");
+    renderPlayersDirectory();
+    headingToFocus = document.getElementById("playersHeading");
+  } else if (view === "notifications") {
+    notifView.classList.remove("hidden");
+    tabNotif.classList.add("active");
+    renderNotifications();
+    headingToFocus = document.getElementById("notificationsHeading");
+  } else {
+    listView.classList.remove("hidden");
+    tabList.classList.add("active");
+    headingToFocus = document.getElementById("listHeading");
+  }
+
+  window.scrollTo({ top: 0, behavior: "instant" });
+  if (headingToFocus) {
+    headingToFocus.focus({ preventScroll: true });
+  }
 }
 
-/* AUTHENTICATION */
+function handleBackdropClose(event, modalId) {
+  if (event.target.id === modalId) {
+    document.getElementById(modalId).classList.add("hidden");
+    if (modalId === "levelRecordsModal") activeModalLevelId = null;
+  }
+}
 
-function updateAuthUI() {
+/* NOTIFICATIONS RENDERING */
+
+function renderNotifications() {
+  const feed = document.getElementById("notificationsFeed");
+  if (!allNotifications || allNotifications.length === 0) {
+    feed.innerHTML = `<div class="empty">No level placement notifications yet.</div>`;
+    return;
+  }
+
+  feed.innerHTML = allNotifications.map(item => {
+    const timeLabel = item.created_at ? new Date(item.created_at).toLocaleString() : "Recently";
+    const suggested = escapeHTML(item.suggested_rank ?? "?");
+    const placed = escapeHTML(item.placed_rank ?? "?");
+
+    return `
+      <div class="notif-card">
+        <div class="notif-top">
+          <div class="notif-level-name">${escapeHTML(item.level_name)}</div>
+          <div class="notif-timestamp">${escapeHTML(timeLabel)}</div>
+        </div>
+
+        <div class="notif-rank-row">
+          <span class="notif-pill suggested">Suggested Rank #${suggested}</span>
+          <span class="notif-arrow">→</span>
+          <span class="notif-pill placed">Placed at #${placed}</span>
+        </div>
+
+        <div class="helper-note" style="margin-top:2px;">
+          Creator: ${escapeHTML(item.creator || "Unknown")} · Verifier: ${escapeHTML(item.verifier || "Unknown")}
+          ${item.submitter_name ? ` · Submitted by ${escapeHTML(item.submitter_name)}` : ""}
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+/* PLAYER STATS & DETAIL PANE */
+
+function buildPlayerStatsMap() {
+  const levelById = new Map(allLevels.map(l => [String(l.id), l]));
+  const map = new Map();
+
+  function ensurePlayer(rawName) {
+    const clean = String(rawName ?? "").trim();
+    if (!clean || clean.toLowerCase() === "unknown") return null;
+    const key = clean.toLowerCase();
+    if (!map.has(key)) {
+      map.set(key, {
+        player: clean,
+        points: 0,
+        completions: [],
+        completedLevelKeys: new Set()
+      });
+    }
+    return map.get(key);
+  }
+
+  for (const p of signedUpUsers) {
+    ensurePlayer(p?.nickname);
+  }
+
+  for (const rec of approvedRecords) {
+    const lvl = levelById.get(String(rec.level_id_ref));
+    if (!lvl) continue;
+    const plEntry = ensurePlayer(rec.player_name);
+    if (!plEntry) continue;
+    const pts = getPointsForRank(lvl.rank);
+    const lvlKey = String(lvl.id);
+    plEntry.points += pts;
+    plEntry.completions.push({
+      record: rec,
+      level: lvl,
+      points: pts,
+      videoUrl: rec.video_url || lvl.video_url || "",
+      customThumbUrl: lvl.custom_thumb_url || null,
+      isVerification: false
+    });
+    plEntry.completedLevelKeys.add(lvlKey);
+  }
+
+  for (const lvl of allLevels) {
+    const pts = getPointsForRank(lvl.rank);
+    const verEntry = ensurePlayer(lvl.verifier);
+    if (!verEntry) continue;
+    verEntry.points += pts;
+    const lvlKey = String(lvl.id);
+    if (!verEntry.completedLevelKeys.has(lvlKey)) {
+      verEntry.completions.push({
+        record: null,
+        level: lvl,
+        points: pts,
+        videoUrl: lvl.video_url || "",
+        customThumbUrl: lvl.custom_thumb_url || null,
+        isVerification: true
+      });
+      verEntry.completedLevelKeys.add(lvlKey);
+    }
+  }
+
+  for (const entry of map.values()) {
+    entry.completions.sort((a, b) => Number(a.level.rank) - Number(b.level.rank));
+  }
+
+  return map;
+}
+
+function renderSplitPlayerDetail(paneId, playerName, lbPlacement = null) {
+  const pane = document.getElementById(paneId);
+  const map = buildPlayerStatsMap();
+  const entry = map.get(String(playerName ?? "").trim().toLowerCase());
+
+  if (!entry) {
+    pane.innerHTML = `<div class="empty">No player selected.</div>`;
+    return;
+  }
+
+  const hardest = entry.completions[0] || null;
+  const rankPrefix = lbPlacement ? `#${lbPlacement} ` : "";
+
+  const hardestHTML = !hardest
+    ? `<div class="empty">No approved completions yet.</div>`
+    : `
+      <div class="hardest-highlight">
+        <div class="record-card-header">
+          <div>
+            <strong>#${escapeHTML(hardest.level.rank)} — ${escapeHTML(hardest.level.name)}</strong>
+            <span class="hardest-badge">HARDEST</span>
+            ${hardest.isVerification ? `<span class="verified-badge">VERIFIED</span>` : ""}
+            <span class="pts-badge">+${hardest.points} pts</span>
+          </div>
+          <div style="display:flex;gap:6px;">
+            ${
+              isEditor && hardest.record
+                ? `<button class="transfer-btn" type="button" onclick="openTransferModal(${hardest.record.id}, '${escapeHTML(entry.player.replace(/'/g, "\\'"))}', '${escapeHTML(hardest.level.name.replace(/'/g, "\\'"))}')">Move Record</button>
+                   <button class="delete-btn" type="button" onclick="deleteRecord(${hardest.record.id})">Delete Record</button>`
+                : ""
+            }
+          </div>
+        </div>
+        <div class="helper-note" style="margin-top:4px;margin-bottom:8px;">
+          By ${escapeHTML(hardest.level.creator || "Unknown")} · ID: ${escapeHTML(hardest.level.level_id || "N/A")}
+        </div>
+        ${renderVideoPreview(hardest.videoUrl, hardest.customThumbUrl)}
+      </div>
+    `;
+
+  const completedRowsHTML = !entry.completions.length
+    ? `<div class="empty">No completions recorded for this player yet.</div>`
+    : `
+      <div class="cccl-completed-list">
+        ${entry.completions.map((item, idx) => `
+          <div class="cccl-completed-row" onclick="openLevelRecordsModal(${item.level.id})">
+            <div class="cccl-comp-rank">#${escapeHTML(item.level.rank)}</div>
+            <div>
+              <div class="cccl-comp-name">
+                ${escapeHTML(item.level.name)}
+                ${idx === 0 ? `<span class="hardest-badge">HARDEST</span>` : ""}
+                ${item.isVerification ? `<span class="verified-badge">VERIFIED</span>` : ""}
+              </div>
+              <div class="helper-note" style="margin-top:2px;">
+                By ${escapeHTML(item.level.creator || "Unknown")} · Click for level records &amp; proof
+              </div>
+            </div>
+            <div class="cccl-comp-pts">+${item.points}</div>
+          </div>
+        `).join("")}
+      </div>
+    `;
+
+  pane.innerHTML = `
+    <div class="cccl-player-header">
+      <h2 class="cccl-player-title">${rankPrefix}${escapeHTML(entry.player)}</h2>
+      <div class="cccl-player-points">${entry.points} pts</div>
+    </div>
+
+    <h3 class="cccl-section-heading" style="margin-top:0;">Hardest</h3>
+    ${hardestHTML}
+
+    <h3 class="cccl-section-heading">Completed (${entry.completions.length})</h3>
+    ${completedRowsHTML}
+  `;
+}
+
+/* LEVEL RECORDS MODAL & TRANSFER */
+
+function openLevelRecordsModal(levelId) {
+  const level = allLevels.find(l => String(l.id) === String(levelId));
+  if (!level) return;
+
+  activeModalLevelId = level.id;
+  const pts = getPointsForRank(level.rank);
+  const recsForLevel = approvedRecords.filter(r => String(r.level_id_ref) === String(level.id));
+
+  document.getElementById("levelRecordsTitle").textContent = `#${level.rank} — ${level.name} (${pts} pts)`;
+  document.getElementById("levelRecordsMeta").textContent =
+    `By ${level.creator || "Unknown"} · Verified by ${level.verifier || "Unknown"} · ID: ${level.level_id || "N/A"}`;
+
+  const verEl = document.getElementById("levelRecordsVerification");
+  if (safeURL(level.video_url)) {
+    verEl.innerHTML = `
+      <div style="font-size:11px;color:#a5a5ae;text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px;">
+        Verification Video
+      </div>
+      ${renderVideoPreview(level.video_url, level.custom_thumb_url)}
+    `;
+  } else {
+    verEl.innerHTML = "";
+  }
+
+  const listEl = document.getElementById("levelRecordsList");
+  if (!recsForLevel.length) {
+    listEl.innerHTML = `<div class="empty">No approved records on this level yet.</div>`;
+  } else {
+    listEl.innerHTML = recsForLevel.map((rec, idx) => `
+      <div class="record-card">
+        <div class="record-card-header">
+          <div>
+            <strong>#${idx + 1} ${escapeHTML(rec.player_name)}</strong>
+            <span class="pts-badge">+${pts} pts</span>
+          </div>
+          <div style="display:flex;gap:6px;">
+            ${
+              isEditor
+                ? `<button class="transfer-btn" type="button" onclick="openTransferModal(${rec.id}, '${escapeHTML(rec.player_name.replace(/'/g, "\\'"))}', '${escapeHTML(level.name.replace(/'/g, "\\'"))}')">Move Record</button>
+                   <button class="delete-btn" type="button" onclick="deleteRecord(${rec.id})">Delete Record</button>`
+                : ""
+            }
+          </div>
+        </div>
+        ${renderVideoPreview(rec.video_url)}
+      </div>
+    `).join("");
+  }
+
+  document.getElementById("levelRecordsModal").classList.remove("hidden");
+}
+
+function closeLevelRecordsModal() {
+  activeModalLevelId = null;
+  document.getElementById("levelRecordsModal").classList.add("hidden");
+}
+
+function openTransferModal(recordId, currentHolder, levelName) {
+  if (!isEditor) return alert("Access denied: Editor status required.");
+  refreshSignedUpUsersList();
+  document.getElementById("transferRecordId").value = recordId;
+  document.getElementById("transferRecordDetails").textContent =
+    `Move completion record of "${levelName}" from "${currentHolder}" to a new account:`;
+  document.getElementById("targetPlayerNicknameInput").value = "";
+  document.getElementById("transferRecordModal").classList.remove("hidden");
+}
+
+function closeTransferModal() {
+  document.getElementById("transferRecordId").value = "";
+  document.getElementById("transferRecordModal").classList.add("hidden");
+}
+
+async function executeRecordTransfer() {
+  if (!isEditor) return alert("Access denied: Editor status required.");
+
+  const recordId = document.getElementById("transferRecordId").value;
+  const targetNickname = document.getElementById("targetPlayerNicknameInput").value.trim();
+
+  if (!recordId || !targetNickname) {
+    return alert("Please enter or select a target username/nickname.");
+  }
+
+  const { error } = await sb
+    .from("Records")
+    .update({ player_name: targetNickname })
+    .eq("id", recordId);
+
+  if (error) {
+    return alert("Could not transfer record: " + error.message);
+  }
+
+  closeTransferModal();
+  await loadData();
+  if (activeModalLevelId !== null) {
+    openLevelRecordsModal(activeModalLevelId);
+  }
+  alert(`Record transferred successfully to "${targetNickname}"!`);
+}
+
+async function deleteRecord(recordId) {
+  if (!isEditor) return alert("Access denied: Editor status required.");
+  if (!confirm("Delete this record? It will also remove its points from the leaderboard.")) return;
+
+  const { error } = await sb.from("Records").delete().eq("id", recordId);
+  if (error) {
+    return alert("Could not delete record: " + error.message);
+  }
+
+  await loadData();
+  if (activeModalLevelId !== null) {
+    openLevelRecordsModal(activeModalLevelId);
+  }
+}
+
+/* AUTH & UNIQUE NICKNAME ACCOUNT CREATION */
+
+function toggleAuthMode() {
+  isSignUpMode = !isSignUpMode;
+  const title = document.getElementById("authTitle");
+  const btn = document.getElementById("authSubmitBtn");
+  const toggle = document.getElementById("authToggleLink");
+  const nickInput = document.getElementById("signupNickname");
+
+  if (isSignUpMode) {
+    title.textContent = "Create Account";
+    btn.textContent = "Sign Up";
+    toggle.textContent = "Already have an account? Log In";
+    nickInput.classList.remove("hidden");
+  } else {
+    title.textContent = "Account Login";
+    btn.textContent = "Log In";
+    toggle.textContent = "Don't have an account? Sign Up";
+    nickInput.classList.add("hidden");
+  }
+}
+
+function syncRecordNicknameInput() {
+  const recPlayerInput = document.getElementById("recPlayerName");
+  if (currentUser && currentNickname) {
+    recPlayerInput.value = currentNickname;
+    recPlayerInput.readOnly = true;
+    recPlayerInput.title = "Using your account nickname";
+  } else {
+    recPlayerInput.readOnly = false;
+    recPlayerInput.title = "";
+  }
+}
+
+async function handleAuthSubmit() {
+  const nickname = document.getElementById("signupNickname").value.trim();
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+
+  if (!email || !password) {
+    return alert("Please enter both email and password.");
+  }
+
+  if (isSignUpMode) {
+    if (!nickname) {
+      return alert("Please enter a nickname for your account.");
+    }
+
+    if (isNicknameTaken(nickname)) {
+      return alert(`The nickname "${nickname}" is already taken by another account. Please choose a unique name.`);
+    }
+
+    const { data, error } = await sb.auth.signUp({
+      email,
+      password,
+      options: { data: { nickname } }
+    });
+
+    if (error) {
+      return alert("Sign up failed: " + error.message);
+    }
+
+    if (data?.user && data?.session) {
+      await sb.from("Profiles").upsert([{ id: data.user.id, nickname }], { onConflict: "id" });
+      currentNickname = nickname;
+      syncRecordNicknameInput();
+      alert("Account created with nickname: " + nickname);
+    } else {
+      alert("Account created! Check your email if confirmation is enabled, or log in now.");
+    }
+  } else {
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) alert("Login failed: " + error.message);
+  }
+}
+
+async function loadUserNickname() {
+  if (!currentUser) {
+    currentNickname = "";
+    syncRecordNicknameInput();
+    return;
+  }
+
+  const { data: profile } = await sb
+    .from("Profiles")
+    .select("nickname")
+    .eq("id", currentUser.id)
+    .maybeSingle();
+
+  currentNickname =
+    profile?.nickname ||
+    currentUser.user_metadata?.nickname ||
+    currentUser.email.split("@")[0];
+
+  if (!profile?.nickname && currentUser.user_metadata?.nickname) {
+    await sb.from("Profiles").upsert([{ id: currentUser.id, nickname: currentNickname }], { onConflict: "id" });
+  }
+
+  syncRecordNicknameInput();
+}
+
+function openNicknameModal() {
+  if (!currentUser) return;
+  document.getElementById("newNicknameInput").value = currentNickname;
+  document.getElementById("nicknameModal").classList.remove("hidden");
+}
+
+function closeNicknameModal() {
+  document.getElementById("nicknameModal").classList.add("hidden");
+}
+
+async function saveNewNickname() {
+  if (!currentUser) return;
+  const newNickname = document.getElementById("newNicknameInput").value.trim();
+
+  if (!newNickname) {
+    return alert("Please enter a valid nickname.");
+  }
+
+  if (isNicknameTaken(newNickname, currentUser.id)) {
+    return alert(`The nickname "${newNickname}" is already taken by another account. Please choose a unique name.`);
+  }
+
+  const oldNickname = currentNickname;
+
+  const { error: profErr } = await sb
+    .from("Profiles")
+    .upsert([{ id: currentUser.id, nickname: newNickname }], { onConflict: "id" });
+
+  if (profErr) {
+    return alert("Could not update profile: " + profErr.message);
+  }
+
+  await sb.auth.updateUser({ data: { nickname: newNickname } });
+
+  if (oldNickname && oldNickname !== newNickname) {
+    const updates = [
+      sb.from("Records").update({ player_name: newNickname }).eq("player_name", oldNickname),
+      sb.from("LevelSubmissions").update({ submitter_name: newNickname }).eq("submitter_name", oldNickname)
+    ];
+    if (isEditor) {
+      updates.push(sb.from("Levels").update({ verifier: newNickname }).eq("verifier", oldNickname));
+    }
+    await Promise.all(updates);
+  }
+
+  currentNickname = newNickname;
+  closeNicknameModal();
+  updateAuthUI();
+  alert("Nickname updated successfully!");
+}
+
+async function updateAuthUI() {
   const loginPanel = document.getElementById("loginPanel");
   const editorPanel = document.getElementById("editorPanel");
+  const userStatusPanel = document.getElementById("userStatusPanel");
+  const loggedUserEmail = document.getElementById("loggedUserEmail");
+  const loggedUserNickname = document.getElementById("loggedUserNickname");
   const editorEmail = document.getElementById("editorEmail");
 
   if (currentUser) {
     loginPanel.classList.add("hidden");
-    editorPanel.classList.remove("hidden");
-    editorEmail.textContent = `(${currentUser.email})`;
+    await loadUserNickname();
+
+    const { data: editorData } = await sb
+      .from("Editors")
+      .select("email")
+      .ilike("email", currentUser.email)
+      .maybeSingle();
+
+    isEditor = !!editorData;
+
+    if (isEditor) {
+      userStatusPanel.classList.add("hidden");
+      editorPanel.classList.remove("hidden");
+      editorEmail.textContent = `(${currentNickname} · ${currentUser.email})`;
+    } else {
+      editorPanel.classList.add("hidden");
+      userStatusPanel.classList.remove("hidden");
+      loggedUserNickname.textContent = currentNickname;
+      loggedUserEmail.textContent = currentUser.email;
+    }
   } else {
+    isEditor = false;
+    currentNickname = "";
+    syncRecordNicknameInput();
     loginPanel.classList.remove("hidden");
     editorPanel.classList.add("hidden");
+    userStatusPanel.classList.add("hidden");
+    closeEditModal();
   }
 
-  loadLevels();
-}
-
-async function login() {
-  const email = document.getElementById("loginEmail").value.trim();
-  const password = document.getElementById("loginPassword").value;
-
-  const { error } = await sb.auth.signInWithPassword({
-    email,
-    password
-  });
-
-  if (error) {
-    alert("Login failed: " + error.message);
-  }
+  await loadData();
 }
 
 async function logout() {
   await sb.auth.signOut();
 }
 
-/* LOAD LEVELS */
+async function loadData() {
+  const [{ data: levels, error: lvlErr }, { data: recs, error: recErr }, { data: profiles }, { data: notifs, error: notifErr }] = await Promise.all([
+    sb.from("Levels").select("*").order("rank", { ascending: true }),
+    sb.from("Records").select("*"),
+    sb.from("Profiles").select("id, nickname"),
+    sb.from("Notifications").select("*").order("created_at", { ascending: false })
+  ]);
 
-async function loadLevels() {
-  const container = document.getElementById("list");
-
-  container.innerHTML = `
-    <div class="empty">Loading levels...</div>
-  `;
-
-  const { data: levels, error } = await sb
-    .from("Levels")
-    .select("*")
-    .order("rank", { ascending: true });
-
-  if (error) {
-    container.innerHTML = `
-      <div class="empty">
-        Error loading levels: ${escapeHTML(error.message)}
-      </div>
-    `;
+  if (lvlErr) {
+    document.getElementById("list").innerHTML = `<div class="empty">Error loading levels: ${escapeHTML(lvlErr.message)}</div>`;
     return;
   }
 
-  allLevels = levels || [];
+  allLevels = (levels || []).sort((a, b) => Number(a.rank) - Number(b.rank));
+  approvedRecords = recErr
+    ? []
+    : (recs || []).filter(r => String(r.status ?? "approved").trim().toLowerCase() === "approved");
+  signedUpUsers = profiles || [];
+  if (!notifErr && Array.isArray(notifs)) {
+    allNotifications = notifs;
+  }
 
+  refreshSignedUpUsersList();
+  populateRecordLevelSelect();
   filterLevels();
+  renderLeaderboard();
+  renderPlayersDirectory();
+  renderNotifications();
+
+  if (isEditor) {
+    await loadEditorQueues();
+  }
 }
 
-/* SEARCH */
+function populateRecordLevelSelect() {
+  const sel = document.getElementById("recLevelSelect");
+  const previous = sel.value;
+  sel.innerHTML = `<option value="">Select a level...</option>` + allLevels.map(lvl =>
+    `<option value="${escapeHTML(lvl.id)}">#${escapeHTML(lvl.rank)} — ${escapeHTML(lvl.name)} (${getPointsForRank(lvl.rank)} pts)</option>`
+  ).join("");
+  if (previous) sel.value = previous;
+}
 
 function filterLevels() {
-  const query = document
-    .getElementById("searchInput")
-    .value
-    .trim()
-    .toLowerCase();
-
-  const filtered = allLevels.filter(lvl => {
-    return (
-      String(lvl.name ?? "").toLowerCase().includes(query) ||
-      String(lvl.creator ?? "").toLowerCase().includes(query) ||
-      String(lvl.verifier ?? "").toLowerCase().includes(query) ||
-      String(lvl.level_id ?? "").toLowerCase().includes(query)
-    );
-  });
-
+  const query = document.getElementById("searchInput").value.trim().toLowerCase();
+  const filtered = allLevels.filter(lvl =>
+    String(lvl.name ?? "").toLowerCase().includes(query) ||
+    String(lvl.creator ?? "").toLowerCase().includes(query) ||
+    String(lvl.verifier ?? "").toLowerCase().includes(query) ||
+    String(lvl.level_id ?? "").toLowerCase().includes(query)
+  );
   renderLevels(filtered);
 }
 
-/* DISPLAY LEVELS */
-
 function renderLevels(levels) {
   const container = document.getElementById("list");
-
   if (!levels || levels.length === 0) {
-    container.innerHTML = `
-      <div class="empty">
-        No levels found.
-      </div>
-    `;
+    container.innerHTML = `<div class="empty">No levels found.</div>`;
     return;
   }
 
+  const countByLevel = new Map();
+  for (const r of approvedRecords) {
+    const key = String(r.level_id_ref);
+    countByLevel.set(key, (countByLevel.get(key) || 0) + 1);
+  }
+
   container.innerHTML = levels.map(lvl => {
-    const ytId = getYouTubeId(lvl.video_url);
-
-    const thumbUrl = ytId
-      ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`
-      : null;
-
+    const { thumbUrl, fallbackThumbUrl, isMedal } = getVideoDetails(lvl.video_url, lvl.custom_thumb_url);
     const proofURL = safeURL(lvl.video_url);
+    const pts = getPointsForRank(lvl.rank);
+    const recCount = countByLevel.get(String(lvl.id)) || 0;
+    const onErrorHandler = fallbackThumbUrl
+      ? `this.onerror=null;this.src='${escapeHTML(fallbackThumbUrl)}';`
+      : `this.onerror=null;this.style.opacity='0.35';`;
 
     return `
-      <div
-        class="level-row"
-        data-rank="${escapeHTML(lvl.rank)}"
-      >
-
-        <div class="rank">
-          #${escapeHTML(lvl.rank)}
-        </div>
+      <div class="level-row" data-rank="${escapeHTML(lvl.rank)}" data-open-level="${escapeHTML(lvl.id)}">
+        <div class="rank">#${escapeHTML(lvl.rank)}</div>
 
         <div>
           ${
             thumbUrl
-              ? `
-                <img
-                  class="thumbnail"
-                  src="${thumbUrl}"
-                  alt="${escapeHTML(lvl.name)} thumbnail"
-                  loading="lazy"
-                  onerror="this.style.display='none'"
-                >
-              `
-              : `
-                <div class="thumbnail-placeholder"></div>
-              `
+              ? `<img class="thumbnail" src="${escapeHTML(thumbUrl)}" alt="${escapeHTML(lvl.name)} thumbnail" loading="lazy" onerror="${onErrorHandler}">`
+              : isMedal
+                ? `<div class="medal-thumb-box">${MEDAL_LOGO_SVG}<span class="medal-thumb-label">MEDAL</span></div>`
+                : `<div class="thumbnail-placeholder"></div>`
           }
         </div>
 
         <div class="level-info">
-
           <div class="level-name">
             ${escapeHTML(lvl.name)}
+            <span class="pts-badge">${pts} pts</span>
+            <span class="records-count-badge">${recCount} record${recCount === 1 ? "" : "s"}</span>
           </div>
-
           <div class="level-meta">
-            By ${escapeHTML(lvl.creator || "Unknown")}
-            &nbsp;·&nbsp;
-            Verified by ${escapeHTML(lvl.verifier || "Unknown")}
-            <br>
-            <span class="level-id">
-              ID: ${escapeHTML(lvl.level_id || "N/A")}
-            </span>
+            By ${escapeHTML(lvl.creator || "Unknown")} · Verified by ${escapeHTML(lvl.verifier || "Unknown")}<br>
+            <span class="level-id">ID: ${escapeHTML(lvl.level_id || "N/A")} · Click level for records &amp; videos</span>
           </div>
-
-          <div class="level-actions">
-            ${
-              proofURL
-                ? `
-                  <a
-                    class="proof-link"
-                    href="${escapeHTML(proofURL)}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Watch Proof ↗
-                  </a>
-                `
-                : ""
-            }
-
-            ${
-              currentUser
-                ? `
-                  <button
-                    class="delete-btn"
-                    data-delete="${escapeHTML(lvl.id)}"
-                  >
-                    Delete
-                  </button>
-                `
-                : ""
-            }
-          </div>
-
         </div>
 
-        <div></div>
-
+        <div class="level-actions">
+          ${proofURL ? `<a class="proof-link" href="${escapeHTML(proofURL)}" target="_blank" rel="noopener noreferrer">Watch Proof ↗</a>` : ""}
+          ${
+            isEditor
+              ? `
+                <button class="edit-btn" type="button" data-edit="${escapeHTML(lvl.id)}">Edit</button>
+                <button class="delete-btn" type="button" data-delete="${escapeHTML(lvl.id)}">Delete</button>
+              `
+              : ""
+          }
+        </div>
       </div>
     `;
   }).join("");
 }
 
-/* DELETE LEVEL */
+function renderLeaderboard() {
+  const container = document.getElementById("leaderboardList");
+  const detailPane = document.getElementById("leaderboardDetailPane");
+  const query = (document.getElementById("leaderboardSearchInput")?.value || "").trim().toLowerCase();
+  const statsMap = buildPlayerStatsMap();
 
-document.getElementById("list").addEventListener("click", event => {
-  const button = event.target.closest("[data-delete]");
+  const rankedAll = Array.from(statsMap.values())
+    .filter(p => p.points > 0 || p.completions.length > 0)
+    .sort((a, b) => b.points - a.points || b.completions.length - a.completions.length)
+    .map((row, idx) => ({ ...row, lbRank: idx + 1 }));
 
-  if (!button) return;
+  const filtered = rankedAll.filter(row => !query || row.player.toLowerCase().includes(query));
 
-  deleteLevel(button.dataset.delete);
-});
-
-async function deleteLevel(id) {
-  if (!currentUser) return;
-
-  if (!confirm("Are you sure you want to delete this level?")) {
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="empty">No players on the leaderboard yet.</div>`;
+    detailPane.innerHTML = `<div class="empty">No matching player to display.</div>`;
     return;
   }
 
-  const { error } = await sb
-    .from("Levels")
-    .delete()
-    .eq("id", id);
+  const currentSelection = filtered.find(r => r.player.toLowerCase() === String(selectedLeaderboardPlayer || "").toLowerCase()) || filtered[0];
+  selectedLeaderboardPlayer = currentSelection.player;
+
+  container.innerHTML = filtered.map(row => {
+    const isActive = row.player.toLowerCase() === currentSelection.player.toLowerCase();
+    return `
+      <div class="sidebar-player-item ${isActive ? "active" : ""}" data-select-lb="${escapeHTML(row.player)}" data-lb-rank="${row.lbRank}">
+        <div class="sidebar-player-left">
+          <span class="sidebar-rank">#${row.lbRank}</span>
+          <span class="sidebar-pts-subtle">${row.points}</span>
+          <span class="sidebar-name">${escapeHTML(row.player)}</span>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  renderSplitPlayerDetail("leaderboardDetailPane", currentSelection.player, currentSelection.lbRank);
+}
+
+function renderPlayersDirectory() {
+  const container = document.getElementById("playersList");
+  const detailPane = document.getElementById("playersDetailPane");
+  const query = (document.getElementById("playerSearchInput")?.value || "").trim().toLowerCase();
+  const statsMap = buildPlayerStatsMap();
+
+  const rankedAll = Array.from(statsMap.values())
+    .sort((a, b) => b.points - a.points || a.player.localeCompare(b.player))
+    .map((row, idx) => ({ ...row, lbRank: idx + 1 }));
+
+  const filtered = rankedAll.filter(p => !query || p.player.toLowerCase().includes(query));
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="empty">No matching players found.</div>`;
+    detailPane.innerHTML = `<div class="empty">No matching player to display.</div>`;
+    return;
+  }
+
+  const currentSelection = filtered.find(r => r.player.toLowerCase() === String(selectedPlayersTabPlayer || "").toLowerCase()) || filtered[0];
+  selectedPlayersTabPlayer = currentSelection.player;
+
+  container.innerHTML = filtered.map(row => {
+    const isActive = row.player.toLowerCase() === currentSelection.player.toLowerCase();
+    return `
+      <div class="sidebar-player-item ${isActive ? "active" : ""}" data-select-player="${escapeHTML(row.player)}" data-lb-rank="${row.points > 0 ? row.lbRank : ""}">
+        <div class="sidebar-player-left">
+          <span class="sidebar-rank">${row.points > 0 ? `#${row.lbRank}` : "—"}</span>
+          <span class="sidebar-pts-subtle">${row.points} pts</span>
+          <span class="sidebar-name">${escapeHTML(row.player)}</span>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  renderSplitPlayerDetail("playersDetailPane", currentSelection.player, currentSelection.points > 0 ? currentSelection.lbRank : null);
+}
+
+/* PUBLIC SUBMISSIONS */
+
+async function submitLevelProposal() {
+  const name = document.getElementById("subName").value.trim();
+  const suggestedRank = parseInt(document.getElementById("subRank").value, 10) || 1;
+  const creator = document.getElementById("subCreator").value.trim();
+  const verifier = document.getElementById("subVerifier").value.trim();
+  const levelId = document.getElementById("subLevelId").value.trim();
+  const videoUrl = document.getElementById("subVideoUrl").value.trim();
+  const customThumbUrl = document.getElementById("subCustomThumb").value.trim();
+  const submitterName = document.getElementById("subAuthor").value.trim() || currentNickname;
+
+  if (!name) return alert("Please enter a level name.");
+
+  const { error } = await sb.from("LevelSubmissions").insert([{
+    name,
+    suggested_rank: suggestedRank,
+    creator,
+    verifier,
+    level_id: levelId,
+    video_url: videoUrl,
+    custom_thumb_url: customThumbUrl,
+    submitter_name: submitterName,
+    status: "pending"
+  }]);
 
   if (error) {
-    alert("Delete failed: " + error.message);
+    alert("Could not submit level: " + error.message);
   } else {
-    loadLevels();
+    ["subName", "subRank", "subCreator", "subVerifier", "subLevelId", "subVideoUrl", "subCustomThumb", "subAuthor"].forEach(id => {
+      document.getElementById(id).value = "";
+    });
+    alert("Level submitted! Waiting for editor approval.");
+    if (isEditor) await loadEditorQueues();
   }
 }
 
-/* ADD LEVEL */
+async function submitRecord() {
+  const levelIdRef = document.getElementById("recLevelSelect").value;
+  const playerName = (currentUser && currentNickname)
+    ? currentNickname
+    : document.getElementById("recPlayerName").value.trim();
+  const videoUrl = document.getElementById("recVideoUrl").value.trim();
 
-async function addLevel() {
-  if (!currentUser) {
-    return alert("Log in as an editor first.");
+  if (!levelIdRef || !playerName || !videoUrl) {
+    return alert("Please select a level, enter a nickname, and provide a proof URL.");
   }
 
+  const { error } = await sb.from("Records").insert([{
+    level_id_ref: Number(levelIdRef),
+    player_name: playerName,
+    video_url: videoUrl,
+    status: "pending"
+  }]);
+
+  if (error) {
+    alert("Could not submit record: " + error.message);
+  } else {
+    document.getElementById("recVideoUrl").value = "";
+    if (!currentUser) {
+      document.getElementById("recPlayerName").value = "";
+    }
+    alert(`Record submitted under "${playerName}"! Waiting for editor approval.`);
+    if (isEditor) await loadEditorQueues();
+  }
+}
+
+/* EDITOR APPROVAL QUEUES */
+
+async function loadEditorQueues() {
+  if (!isEditor) return;
+
+  const [{ data: subs }, { data: recs }] = await Promise.all([
+    sb.from("LevelSubmissions").select("*").eq("status", "pending").order("created_at", { ascending: true }),
+    sb.from("Records").select("*").eq("status", "pending").order("created_at", { ascending: true })
+  ]);
+
+  pendingLevelSubs = subs || [];
+  pendingRecords = recs || [];
+  refreshSignedUpUsersList();
+  renderEditorQueues();
+}
+
+function renderEditorQueues() {
+  const lvlQueue = document.getElementById("pendingLevelsQueue");
+  const recQueue = document.getElementById("pendingRecordsQueue");
+
+  if (!pendingLevelSubs.length) {
+    lvlQueue.innerHTML = `<div class="empty">No pending level submissions.</div>`;
+  } else {
+    lvlQueue.innerHTML = pendingLevelSubs.map(sub => `
+      <div class="queue-item">
+        <div class="queue-top">
+          <div>
+            <strong>${escapeHTML(sub.name)}</strong> (Suggested #${escapeHTML(sub.suggested_rank || 1)})<br>
+            <span style="color:#999ca7;font-size:11px;">
+              Creator: ${escapeHTML(sub.creator || "Unknown")} · Verifier: ${escapeHTML(sub.verifier || "Unknown")} · ID: ${escapeHTML(sub.level_id || "N/A")}
+              ${sub.submitter_name ? `· By ${escapeHTML(sub.submitter_name)}` : ""}
+            </span>
+          </div>
+          <div class="queue-actions">
+            <input
+              type="number"
+              min="1"
+              class="approve-rank-input"
+              id="approveRank-${escapeHTML(sub.id)}"
+              value="${escapeHTML(sub.suggested_rank || 1)}"
+              title="Set placement rank"
+            />
+            <input
+              type="text"
+              list="signedUpUsersList"
+              class="approve-verifier-input"
+              id="approveVerifier-${escapeHTML(sub.id)}"
+              value="${escapeHTML(sub.verifier || "")}"
+              placeholder="Search verifier (gets pts)"
+              title="Search signed-up users to assign verifier points"
+            />
+            <button class="approve-btn" type="button" onclick="approveLevelSubmission(${sub.id})">Approve</button>
+            <button class="delete-btn" type="button" onclick="rejectLevelSubmission(${sub.id})">Reject</button>
+          </div>
+        </div>
+        ${renderVideoPreview(sub.video_url, sub.custom_thumb_url)}
+      </div>
+    `).join("");
+  }
+
+  const levelById = new Map(allLevels.map(l => [String(l.id), l]));
+
+  if (!pendingRecords.length) {
+    recQueue.innerHTML = `<div class="empty">No pending records.</div>`;
+  } else {
+    recQueue.innerHTML = pendingRecords.map(rec => {
+      const lvl = levelById.get(String(rec.level_id_ref));
+      const lvlLabel = lvl ? `#${lvl.rank} ${lvl.name} (${getPointsForRank(lvl.rank)} pts)` : `Level #${rec.level_id_ref}`;
+      return `
+        <div class="queue-item">
+          <div class="queue-top">
+            <div>
+              <strong>${escapeHTML(rec.player_name)}</strong> cleared <strong>${escapeHTML(lvlLabel)}</strong>
+            </div>
+            <div class="queue-actions">
+              <button class="approve-btn" type="button" onclick="approveRecord(${rec.id})">Approve</button>
+              <button class="delete-btn" type="button" onclick="rejectRecord(${rec.id})">Reject</button>
+            </div>
+          </div>
+          ${renderVideoPreview(rec.video_url)}
+        </div>
+      `;
+    }).join("");
+  }
+}
+
+async function fetchFreshLevels() {
+  const { data, error } = await sb.from("Levels").select("*").order("rank", { ascending: true });
+  if (error) return { levels: null, error };
+  allLevels = (data || []).sort((a, b) => Number(a.rank) - Number(b.rank));
+  return { levels: allLevels, error: null };
+}
+
+async function shiftRanksDownFrom(targetRank, excludeId = null) {
+  const { levels, error: fetchErr } = await fetchFreshLevels();
+  if (fetchErr) return fetchErr;
+
+  const levelsToPushDown = levels
+    .filter(lvl => (excludeId === null || String(lvl.id) !== String(excludeId)) && Number(lvl.rank) >= Number(targetRank))
+    .sort((a, b) => Number(b.rank) - Number(a.rank));
+
+  for (const lvl of levelsToPushDown) {
+    const nextRank = Number(lvl.rank) + 1;
+    const { data: updatedRows, error } = await sb
+      .from("Levels")
+      .update({ rank: nextRank })
+      .eq("id", lvl.id)
+      .select("id");
+
+    if (error) return error;
+    if (!updatedRows || updatedRows.length === 0) {
+      return new Error(`Could not update rank for level "${lvl.name}". Check your Supabase RLS UPDATE policy on Levels.`);
+    }
+    lvl.rank = nextRank;
+  }
+  return null;
+}
+
+async function shiftRanksUpAfter(deletedRank) {
+  const { levels, error: fetchErr } = await fetchFreshLevels();
+  if (fetchErr) return fetchErr;
+
+  const levelsToPullUp = levels
+    .filter(lvl => Number(lvl.rank) > Number(deletedRank))
+    .sort((a, b) => Number(a.rank) - Number(b.rank));
+
+  for (const lvl of levelsToPullUp) {
+    const prevRank = Number(lvl.rank) - 1;
+    const { data: updatedRows, error } = await sb
+      .from("Levels")
+      .update({ rank: prevRank })
+      .eq("id", lvl.id)
+      .select("id");
+
+    if (error) return error;
+    if (!updatedRows || updatedRows.length === 0) {
+      return new Error(`Could not move "${lvl.name}" up to #${prevRank}. Check your Supabase RLS UPDATE policy on Levels.`);
+    }
+    lvl.rank = prevRank;
+  }
+  return null;
+}
+
+async function approveLevelSubmission(subId) {
+  if (!isEditor) return alert("Access denied: Editor status required.");
+  const sub = pendingLevelSubs.find(s => String(s.id) === String(subId));
+  if (!sub) return;
+
+  const { levels, error: fetchErr } = await fetchFreshLevels();
+  if (fetchErr) return alert("Could not load current levels: " + fetchErr.message);
+
+  const rankInput = document.getElementById(`approveRank-${subId}`);
+  const verifierInput = document.getElementById(`approveVerifier-${subId}`);
+  const chosenRank = parseInt(rankInput?.value, 10);
+  const suggestedRank = parseInt(sub.suggested_rank, 10) || 1;
+  const targetRank = Math.max(1, chosenRank || suggestedRank || (levels.length + 1));
+  const chosenVerifier = (verifierInput?.value ?? sub.verifier ?? "").trim();
+
+  const shiftErr = await shiftRanksDownFrom(targetRank);
+  if (shiftErr) return alert("Could not shift ranks: " + shiftErr.message);
+
+  const { error: insErr } = await sb.from("Levels").insert([{
+    rank: targetRank,
+    name: sub.name,
+    creator: sub.creator || "",
+    verifier: chosenVerifier,
+    level_id: sub.level_id || "",
+    video_url: (sub.video_url || "").trim(),
+    custom_thumb_url: (sub.custom_thumb_url || "").trim()
+  }]);
+  if (insErr) return alert("Could not insert level: " + insErr.message);
+
+  const { error: subUpdErr } = await sb
+    .from("LevelSubmissions")
+    .update({ status: "approved", verifier: chosenVerifier })
+    .eq("id", subId);
+  if (subUpdErr) return alert("Level added, but could not mark submission approved: " + subUpdErr.message);
+
+  const notifPayload = {
+    level_name: sub.name,
+    suggested_rank: suggestedRank,
+    placed_rank: targetRank,
+    submitter_name: sub.submitter_name || "",
+    creator: sub.creator || "",
+    verifier: chosenVerifier,
+    created_at: new Date().toISOString()
+  };
+
+  const { error: notifErr } = await sb.from("Notifications").insert([notifPayload]);
+  if (notifErr) {
+    allNotifications.unshift(notifPayload);
+  }
+
+  await loadData();
+}
+
+async function rejectLevelSubmission(subId) {
+  if (!isEditor) return alert("Access denied: Editor status required.");
+  await sb.from("LevelSubmissions").update({ status: "rejected" }).eq("id", subId);
+  await loadEditorQueues();
+}
+
+async function approveRecord(recId) {
+  if (!isEditor) return alert("Access denied: Editor status required.");
+  const { error } = await sb.from("Records").update({ status: "approved" }).eq("id", recId);
+  if (error) return alert("Could not approve record: " + error.message);
+  await loadData();
+}
+
+async function rejectRecord(recId) {
+  if (!isEditor) return alert("Access denied: Editor status required.");
+  await sb.from("Records").update({ status: "rejected" }).eq("id", recId);
+  await loadEditorQueues();
+}
+
+/* ROW ACTIONS, EDIT & DELETE */
+
+document.getElementById("list").addEventListener("click", event => {
+  if (event.target.closest("a.proof-link")) return;
+
+  const editButton = event.target.closest("[data-edit]");
+  if (editButton) return openEditModal(editButton.dataset.edit);
+
+  const deleteButton = event.target.closest("[data-delete]");
+  if (deleteButton) return deleteLevel(deleteButton.dataset.delete);
+
+  const row = event.target.closest("[data-open-level]");
+  if (row) openLevelRecordsModal(row.dataset.openLevel);
+});
+
+document.getElementById("leaderboardList").addEventListener("click", event => {
+  const item = event.target.closest("[data-select-lb]");
+  if (!item) return;
+  selectedLeaderboardPlayer = item.dataset.selectLb;
+  renderLeaderboard();
+});
+
+document.getElementById("playersList").addEventListener("click", event => {
+  const item = event.target.closest("[data-select-player]");
+  if (!item) return;
+  selectedPlayersTabPlayer = item.dataset.selectPlayer;
+  renderPlayersDirectory();
+});
+
+function openEditModal(id) {
+  if (!isEditor) return alert("Access denied: Editor status required.");
+  const level = allLevels.find(item => String(item.id) === String(id));
+  if (!level) return;
+
+  refreshSignedUpUsersList();
+  document.getElementById("editRowId").value = level.id;
+  document.getElementById("editRank").value = level.rank ?? "";
+  document.getElementById("editName").value = level.name ?? "";
+  document.getElementById("editCreator").value = level.creator ?? "";
+  document.getElementById("editVerifier").value = level.verifier ?? "";
+  document.getElementById("editLevelId").value = level.level_id ?? "";
+  document.getElementById("editVideoUrl").value = level.video_url ?? "";
+  document.getElementById("editCustomThumb").value = level.custom_thumb_url ?? "";
+  document.getElementById("editModal").classList.remove("hidden");
+}
+
+function closeEditModal() {
+  document.getElementById("editModal").classList.add("hidden");
+  document.getElementById("editRowId").value = "";
+}
+
+async function saveEditedLevel() {
+  if (!isEditor) return alert("Access denied: Editor status required.");
+
+  const id = document.getElementById("editRowId").value;
+  const newRank = parseInt(document.getElementById("editRank").value, 10);
+  const name = document.getElementById("editName").value.trim();
+
+  if (!id || !newRank || newRank < 1 || !name) {
+    return alert("Valid Rank (1 or higher) and Level Name are required.");
+  }
+
+  const { levels, error: fetchErr } = await fetchFreshLevels();
+  if (fetchErr) return alert("Could not load current levels: " + fetchErr.message);
+
+  const currentLevel = levels.find(item => String(item.id) === String(id));
+  const oldRank = currentLevel ? Number(currentLevel.rank) : null;
+
+  if (oldRank !== null && oldRank !== newRank) {
+    if (newRank < oldRank) {
+      const toShiftDown = levels
+        .filter(item => String(item.id) !== String(id) && Number(item.rank) >= newRank && Number(item.rank) < oldRank)
+        .sort((a, b) => Number(b.rank) - Number(a.rank));
+
+      for (const item of toShiftDown) {
+        const nextRank = Number(item.rank) + 1;
+        const { data: updatedRows, error: shiftErr } = await sb
+          .from("Levels")
+          .update({ rank: nextRank })
+          .eq("id", item.id)
+          .select("id");
+
+        if (shiftErr) return alert("Could not update rank order: " + shiftErr.message);
+        if (!updatedRows || updatedRows.length === 0) {
+          return alert(`Could not shift "${item.name}". Check your Supabase RLS UPDATE policy on Levels.`);
+        }
+        item.rank = nextRank;
+      }
+    } else {
+      const toShiftUp = levels
+        .filter(item => String(item.id) !== String(id) && Number(item.rank) > oldRank && Number(item.rank) <= newRank)
+        .sort((a, b) => Number(a.rank) - Number(b.rank));
+
+      for (const item of toShiftUp) {
+        const nextRank = Number(item.rank) - 1;
+        const { data: updatedRows, error: shiftErr } = await sb
+          .from("Levels")
+          .update({ rank: nextRank })
+          .eq("id", item.id)
+          .select("id");
+
+        if (shiftErr) return alert("Could not update rank order: " + shiftErr.message);
+        if (!updatedRows || updatedRows.length === 0) {
+          return alert(`Could not shift "${item.name}". Check your Supabase RLS UPDATE policy on Levels.`);
+        }
+        item.rank = nextRank;
+      }
+    }
+  }
+
+  const updatedPayload = {
+    rank: newRank,
+    name,
+    creator: document.getElementById("editCreator").value.trim(),
+    verifier: document.getElementById("editVerifier").value.trim(),
+    level_id: document.getElementById("editLevelId").value.trim(),
+    video_url: document.getElementById("editVideoUrl").value.trim(),
+    custom_thumb_url: document.getElementById("editCustomThumb").value.trim()
+  };
+
+  const { data: savedRows, error } = await sb
+    .from("Levels")
+    .update(updatedPayload)
+    .eq("id", id)
+    .select("id");
+
+  if (error) {
+    alert("Could not save edits: " + error.message);
+  } else if (!savedRows || savedRows.length === 0) {
+    alert("Could not save edits: 0 rows updated. Check your Supabase RLS UPDATE policy on Levels.");
+  } else {
+    closeEditModal();
+    await loadData();
+  }
+}
+
+async function deleteLevel(id) {
+  if (!isEditor) return alert("Access denied: Editor status required.");
+  if (!confirm("Are you sure you want to delete this level?")) return;
+
+  const { levels, error: fetchErr } = await fetchFreshLevels();
+  if (fetchErr) return alert("Could not load levels before delete: " + fetchErr.message);
+
+  const target = levels.find(item => String(item.id) === String(id));
+  const deletedRank = target ? Number(target.rank) : null;
+
+  const { error } = await sb.from("Levels").delete().eq("id", id);
+  if (error) {
+    return alert("Delete failed: " + error.message);
+  }
+
+  if (deletedRank !== null) {
+    const shiftErr = await shiftRanksUpAfter(deletedRank);
+    if (shiftErr) {
+      alert("Level deleted, but could not shift remaining ranks up: " + shiftErr.message);
+    }
+  }
+
+  await loadData();
+}
+
+async function addLevel() {
+  if (!isEditor) return alert("Access denied: Editor status required.");
+
+  const targetRank = parseInt(document.getElementById("rank").value, 10);
+  const name = document.getElementById("name").value.trim();
+
+  if (!targetRank || targetRank < 1 || !name) {
+    return alert("Rank (1 or higher) and Level Name are required.");
+  }
+
+  const shiftErr = await shiftRanksDownFrom(targetRank);
+  if (shiftErr) return alert("Could not shift existing ranks: " + shiftErr.message);
+
   const payload = {
-    rank: parseInt(document.getElementById("rank").value, 10),
-    name: document.getElementById("name").value.trim(),
+    rank: targetRank,
+    name,
     creator: document.getElementById("creator").value.trim(),
     verifier: document.getElementById("verifier").value.trim(),
     level_id: document.getElementById("level_id").value.trim(),
-    video_url: document.getElementById("video_url").value.trim()
+    video_url: document.getElementById("video_url").value.trim(),
+    custom_thumb_url: document.getElementById("custom_thumb_url").value.trim()
   };
 
-  if (!payload.rank || !payload.name) {
-    return alert("Rank and Level Name are required.");
-  }
-
-  const { error } = await sb
-    .from("Levels")
-    .insert([payload]);
-
+  const { error } = await sb.from("Levels").insert([payload]);
   if (error) {
     alert("Could not add level: " + error.message);
   } else {
-    [
-      "rank",
-      "name",
-      "creator",
-      "verifier",
-      "level_id",
-      "video_url"
-    ].forEach(id => {
+    ["rank", "name", "creator", "verifier", "level_id", "video_url", "custom_thumb_url"].forEach(id => {
       document.getElementById(id).value = "";
     });
-
-    loadLevels();
+    await loadData();
   }
 }
-
-/* INITIALIZATION */
-
-renderTemplates();
 
 sb.auth.onAuthStateChange((_event, session) => {
   currentUser = session?.user ?? null;
@@ -1178,7 +2147,6 @@ sb.auth.getSession().then(({ data }) => {
   currentUser = data.session?.user ?? null;
   updateAuthUI();
 });
-
 </script>
 </body>
 </html>
